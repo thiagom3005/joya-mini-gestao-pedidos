@@ -1,0 +1,9 @@
+{
+  "hook": "proteger-historico.mjs",
+  "casos": [
+    { "descricao": "entrada que não é JSON (falha fechada)", "entradaBruta": "isto nao e json", "saida": 2, "mensagemContem": "JSON" },
+    { "descricao": "entrada vazia (falha fechada)", "entradaBruta": "", "saida": 2 },
+    { "descricao": "JSON que não é objeto (falha fechada)", "entradaBruta": "42", "saida": 2 },
+    { "descricao": "Bash sem tool_input (nada a executar)", "entradaBruta": "{\"hook_event_name\":\"PreToolUse\",\"tool_name\":\"Bash\"}", "saida": 0 }
+  ]
+}

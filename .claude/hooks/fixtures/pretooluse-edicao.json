@@ -1,0 +1,25 @@
+{
+  "hook": "proteger-historico.mjs",
+  "base": {
+    "session_id": "fixture",
+    "transcript_path": "",
+    "cwd": "C:\\Projetos\\joya-mini-gestao-pedidos",
+    "permission_mode": "default",
+    "hook_event_name": "PreToolUse",
+    "tool_use_id": "toolu_fixture"
+  },
+  "casos": [
+    { "descricao": "Edit no .env (Windows)", "entrada": { "tool_name": "Edit", "tool_input": { "file_path": "C:\\Projetos\\joya-mini-gestao-pedidos\\.env", "old_string": "A", "new_string": "B", "replace_all": false } }, "saida": 2, "mensagemContem": ".env" },
+    { "descricao": "Write no .env (POSIX)", "entrada": { "tool_name": "Write", "tool_input": { "file_path": "/w/.env", "content": "X=1" } }, "saida": 2 },
+    { "descricao": "MultiEdit no .env", "entrada": { "tool_name": "MultiEdit", "tool_input": { "file_path": "/w/.env", "edits": [] } }, "saida": 2 },
+    { "descricao": "NotebookEdit apontando para .env", "entrada": { "tool_name": "NotebookEdit", "tool_input": { "notebook_path": "/w/.env", "new_source": "" } }, "saida": 2 },
+    { "descricao": "nome em maiúsculas (Windows não distingue)", "entrada": { "tool_name": "Write", "tool_input": { "file_path": "backend\\.ENV", "content": "" } }, "saida": 2 },
+
+    { "descricao": "Write no .env.example", "entrada": { "tool_name": "Write", "tool_input": { "file_path": "C:\\Projetos\\joya-mini-gestao-pedidos\\.env.example", "content": "MSSQL_SA_PASSWORD=" } }, "saida": 0 },
+    { "descricao": "Edit em arquivo comum", "entrada": { "tool_name": "Edit", "tool_input": { "file_path": "/w/docs/plan.md", "old_string": "a", "new_string": "b", "replace_all": false } }, "saida": 0 },
+    { "descricao": "arquivo .envrc", "entrada": { "tool_name": "Write", "tool_input": { "file_path": "/w/.envrc", "content": "" } }, "saida": 0 },
+    { "descricao": "arquivo com extensão .env", "entrada": { "tool_name": "Write", "tool_input": { "file_path": "/w/config/ambiente.env", "content": "" } }, "saida": 0 },
+    { "descricao": "pasta chamada .env.d", "entrada": { "tool_name": "Write", "tool_input": { "file_path": "/w/.env.d/leia.md", "content": "" } }, "saida": 0 },
+    { "descricao": "ferramenta sem campos conhecidos", "entrada": { "tool_name": "FerramentaNova", "tool_input": { "outro": 1 } }, "saida": 0 }
+  ]
+}
