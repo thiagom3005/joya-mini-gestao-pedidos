@@ -449,8 +449,8 @@ candidato e as evidências reais (commits, saídas de testes, clipes). Só entra
 
 | Entrega | Situação | Registro |
 |---|---|---|
-| E0 | Em andamento | `docs/plan.md` criado a partir da rev. 3 aprovada. Pendentes: commit `docs: adiciona plano de implementacao` (a cargo do candidato) e preparação do Docker (ligar o Docker Desktop e baixar as imagens). |
-| E1 | Não iniciada | — |
+| E0 | Concluída (parcial no Docker) | Plano versionado no commit `bcd6696`. Docker Desktop ativo. Imagens já presentes: `dotnet/sdk:10.0`, `mssql/server:2022-latest` (tag CU ainda não fixada) e `node:24-alpine` (baixada na E1). Faltam `dotnet/aspnet:10.0` e `nginx:alpine`, a baixar antes da E9/E10. |
+| E1 | Implementada; aguardando aprovação e commits | `CLAUDE.md`, 4 rules com `paths`, hook `PreToolUse` em Node (forma exec, `onFailure: block`), 4 arquivos de fixtures (135 casos) + `verificar-hooks.mjs` (142 verificações), 2 agentes revisores, `.gitignore`, esqueleto do README. Formatos confirmados no Claude Code 2.1.321 instalado e por captura real (`Bash`, `PowerShell`, `Write`, `Edit`). Verificador aprovado no Windows (Node 24.14) e em Linux (`node:24-alpine`, via Git Bash e PowerShell). Bloqueio ao vivo confirmado com `git rebase --abort` (inofensivo) pelas duas ferramentas. Revisão independente (agente): 13 achados; 11 corrigidos com novas fixtures (continuação de linha, guarda de execução que desligava o hook via link, atribuição no PowerShell, palavras-chave de shell, `reset --soft`, `config pull.rebase`, `clean -x`/`stash --all`, comando Docker do `CLAUDE.md`, `$( )` em aspas, heredoc, `rebase --abort`, leitura do `.env`). Aceito como limitação: agentes revisores são somente leitura por instrução (item 12). **Desvios do plano**: depuração por arquivo `.claude/hooks/.depurar` em vez da variável `JOYA_HOOK_DEPURAR`, porque o ambiente do hook não muda sem reiniciar o app; `settings.json` também nega `Read`/`Edit` do `.env` (camada extra); hook cobre mais casos que a lista original, por achados da revisão. |
 | E2 | Não iniciada | — |
 | E3 | Não iniciada | — |
 | E4 | Não iniciada | — |
