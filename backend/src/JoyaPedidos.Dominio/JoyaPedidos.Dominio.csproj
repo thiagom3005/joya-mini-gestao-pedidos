@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Regras de negócio puras: sem referência a ASP.NET, Dapper, SqlClient ou TimeProvider (spec DEC-01). -->
+  <PropertyGroup>
+    <RootNamespace>JoyaPedidos.Dominio</RootNamespace>
+  </PropertyGroup>
+</Project>

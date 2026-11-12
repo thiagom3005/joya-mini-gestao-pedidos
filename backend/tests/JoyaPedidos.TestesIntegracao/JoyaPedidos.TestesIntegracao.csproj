@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Testes de integração: endpoints HTTP em processo (WebApplicationFactory). A partir da E3 passam a usar
+    SQL Server real via Testcontainers (spec §10.4); nesta etapa não dependem de banco.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>JoyaPedidos.TestesIntegracao</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\JoyaPedidos.Api\JoyaPedidos.Api.csproj" />
+  </ItemGroup>
+</Project>

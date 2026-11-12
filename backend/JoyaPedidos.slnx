@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/JoyaPedidos.Api/JoyaPedidos.Api.csproj" />
+    <Project Path="src/JoyaPedidos.Dominio/JoyaPedidos.Dominio.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/JoyaPedidos.TestesIntegracao/JoyaPedidos.TestesIntegracao.csproj" />
+    <Project Path="tests/JoyaPedidos.TestesUnitarios/JoyaPedidos.TestesUnitarios.csproj" />
+  </Folder>
+</Solution>

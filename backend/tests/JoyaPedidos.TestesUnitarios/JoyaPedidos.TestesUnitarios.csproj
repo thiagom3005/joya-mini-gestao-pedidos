@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Testes unitários: domínio, validadores e funções puras da API, sem banco (spec §10.3). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>JoyaPedidos.TestesUnitarios</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\JoyaPedidos.Dominio\JoyaPedidos.Dominio.csproj" />
+    <ProjectReference Include="..\..\src\JoyaPedidos.Api\JoyaPedidos.Api.csproj" />
+  </ItemGroup>
+</Project>

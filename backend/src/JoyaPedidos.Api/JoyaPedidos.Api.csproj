@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <RootNamespace>JoyaPedidos.Api</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\JoyaPedidos.Dominio\JoyaPedidos.Dominio.csproj" />
+  </ItemGroup>
+</Project>
