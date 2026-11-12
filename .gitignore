@@ -1,0 +1,35 @@
+# Segredos e configuração local (nunca versionar)
+.env
+.env.*
+!.env.example
+*.pfx
+*.key
+.claude/settings.local.json
+CLAUDE.local.md
+
+# Capturas temporárias de depuração dos hooks
+.claude/hooks/.depurar
+.claude/hooks/ultima-entrada.json
+
+# .NET
+bin/
+obj/
+TestResults/
+*.user
+.vs/
+
+# Node / frontend
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
+
+# Editores e sistema operacional
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
