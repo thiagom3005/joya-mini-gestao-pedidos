@@ -52,12 +52,26 @@ desenvolvido com Claude Code em Spec-Driven Development. O processo de engenhari
 
 | Objetivo | Comando |
 |---|---|
+| Restaurar pacotes do backend | `dotnet restore backend/JoyaPedidos.slnx` |
+| Compilar o backend (0 avisos exigidos) | `dotnet build backend/JoyaPedidos.slnx` |
+| Testes unitários e de integração | `dotnet test backend/JoyaPedidos.slnx` (ou `cd backend && dotnet test`) |
+| Só um projeto de teste | `dotnet test --project backend/tests/JoyaPedidos.TestesUnitarios` |
+| Pacotes vulneráveis, inclusive transitivos | `dotnet list backend/JoyaPedidos.slnx package --vulnerable --include-transitive` |
+| SDK e runtimes desatualizados | `dotnet sdk check` |
 | Verificar os hooks do Claude (qualquer SO com Node) | `node .claude/hooks/verificar-hooks.mjs` |
 | Mesma verificação em Linux via Docker, no Git Bash | `MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD":/w:ro -w /w node:24-alpine node .claude/hooks/verificar-hooks.mjs` |
 | Mesma verificação em Linux via Docker, no PowerShell | `docker run --rm -v "${PWD}:/w:ro" -w /w node:24-alpine node .claude/hooks/verificar-hooks.mjs` |
 
-Comandos de build, testes, Docker e frontend serão acrescentados aqui quando existirem (entregas E2, E3 e E10).
-Não invente comandos.
+Comandos de Docker e frontend serão acrescentados quando existirem (entregas E3 e E10). Não invente comandos.
+
+Notas do ambiente .NET:
+- `global.json` (raiz) liga o `dotnet test` ao Microsoft.Testing.Platform (xUnit v3, pacote `xunit.v3` 4.x) e
+  exige um SDK .NET 10. Testes são executáveis (`OutputType Exe`); não há VSTest.
+- `backend/nuget.config` fixa o nuget.org como única fonte. Auditoria NuGet ligada: vulnerabilidade quebra o build.
+  Só NU1900 (falha ao consultar a base, ex.: sem rede) fica como aviso.
+- O hook `PostToolUse` compila só o projeto do arquivo editado (alguns segundos). Antes de commit, compile e teste a
+  solução inteira.
+- `.claude/hooks/fixtures/projeto-com-erro/` tem um erro de compilação **proposital** (fixture do hook). Não corrija.
 
 ## Git
 
