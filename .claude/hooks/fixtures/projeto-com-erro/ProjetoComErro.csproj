@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Fixture do hook pos-edicao.mjs: projeto isolado com erro de compilação PROPOSITAL, usado só pelo
+    verificar-hooks.mjs para provar que o erro é devolvido ao Claude. Não faz parte da solução do backend.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>

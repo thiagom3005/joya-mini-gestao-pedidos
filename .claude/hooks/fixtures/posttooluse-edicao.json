@@ -1,0 +1,35 @@
+{
+  "hook": "pos-edicao.mjs",
+  "mensagemPadrao": "[pos-edicao]",
+  "base": {
+    "session_id": "fixture",
+    "transcript_path": "",
+    "cwd": "${RAIZ}",
+    "permission_mode": "default",
+    "hook_event_name": "PostToolUse",
+    "tool_use_id": "toolu_fixture",
+    "tool_name": "Edit",
+    "tool_response": { "filePath": "", "userModified": false },
+    "duration_ms": 5
+  },
+  "casos": [
+    { "descricao": "Markdown não dispara verificação", "arquivo": "${RAIZ}/docs/plan.md", "saida": 0 },
+    { "descricao": "JSON não dispara verificação", "arquivo": "${RAIZ}/.claude/settings.json", "saida": 0 },
+    { "descricao": "SQL não dispara verificação", "arquivo": "${RAIZ}/database/01-criar-banco.sql", "saida": 0 },
+    { "descricao": ".cs fora de qualquer projeto", "arquivo": "${RAIZ}/.claude/hooks/solto.cs", "saida": 0 },
+    { "descricao": "arquivo fora do repositório", "arquivo": "/fora/do/repositorio/Classe.cs", "saida": 0 },
+    { "descricao": ".tsx sem frontend pronto (sem package.json e node_modules)", "arquivo": "${RAIZ}/frontend/src/App.tsx", "saida": 0 },
+    { "descricao": ".ts em e2e/ é ignorado", "arquivo": "${RAIZ}/e2e/criar-pedido.spec.ts", "saida": 0 },
+    { "descricao": "entrada sem file_path", "entrada": { "tool_input": {} }, "saida": 0 },
+    { "descricao": "build dotnet já em andamento não dispara outro", "arquivo": "${RAIZ}/backend/src/JoyaPedidos.Dominio/Exemplo.cs", "preparar": { "trava": "dotnet", "pidDaTrava": "vivo" }, "saida": 0, "mensagemContem": ["já está em andamento"] },
+    { "descricao": "trava de outro projeto também bloqueia (obj/ compartilhado)", "arquivo": "${RAIZ}/backend/src/JoyaPedidos.Api/Program.cs", "preparar": { "trava": "dotnet", "pidDaTrava": "vivo" }, "saida": 0, "mensagemContem": ["já está em andamento"] },
+    { "descricao": "entrada que não é JSON é falha do hook, não da edição", "entradaBruta": "lixo", "saida": 1, "mensagemContem": ["Falha interna", "não foi afetada"] },
+
+    { "descricao": ".cs em projeto válido compila só o projeto", "arquivo": "${RAIZ}/backend/src/JoyaPedidos.Dominio/Exemplo.cs", "requer": ["dotnet"], "saida": 0 },
+    { "descricao": "trava órfã (processo dono inexistente) é descartada e o build roda", "arquivo": "${RAIZ}/backend/src/JoyaPedidos.Dominio/Exemplo.cs", "preparar": { "trava": "dotnet", "pidDaTrava": "orfao" }, "requer": ["dotnet"], "saida": 0 },
+    { "descricao": "caminho relativo resolvido pelo cwd", "arquivo": "backend/src/JoyaPedidos.Dominio/Exemplo.cs", "requer": ["dotnet"], "saida": 0 },
+    { "descricao": ".csproj editado compila o próprio projeto", "arquivo": "${RAIZ}/backend/src/JoyaPedidos.Api/JoyaPedidos.Api.csproj", "requer": ["dotnet"], "saida": 0 },
+    { "descricao": ".props do backend compila a solução", "arquivo": "${RAIZ}/backend/Directory.Build.props", "requer": ["dotnet"], "saida": 0 },
+    { "descricao": "erro de compilação devolvido ao Claude com a edição mantida", "arquivo": "${RAIZ}/.claude/hooks/fixtures/projeto-com-erro/ComErro.cs", "requer": ["dotnet"], "saida": 2, "mensagemContem": ["CS0029", "A edição foi mantida", "ProjetoComErro.csproj"] }
+  ]
+}

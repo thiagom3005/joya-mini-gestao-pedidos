@@ -21,6 +21,20 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/pos-edicao.mjs"],
+            "timeout": 120,
+            "statusMessage": "Verificando a compilacao do arquivo editado"
+          }
+        ]
+      }
     ]
   }
 }

@@ -9,7 +9,7 @@ CLAUDE.local.md
 
 # Capturas temporárias de depuração dos hooks
 .claude/hooks/.depurar
-.claude/hooks/ultima-entrada.json
+.claude/hooks/ultima-entrada*.json
 
 # .NET
 bin/
