@@ -1,6 +1,7 @@
 using JoyaPedidos.Api.Compartilhado;
 using JoyaPedidos.Api.Modulos.Pedidos.Contratos;
 using JoyaPedidos.Dominio;
+using Microsoft.AspNetCore.Mvc;
 
 namespace JoyaPedidos.Api.Modulos.Pedidos;
 
@@ -18,6 +19,7 @@ public static class PedidosEndpoints
     {
         var pedidos = rotas.MapGroup("/pedidos");
         pedidos.MapPost("", CriarAsync);
+        pedidos.MapGet("", ListarAsync);
         pedidos.MapGet("/{id:int}", ObterAsync);
         return rotas;
     }
@@ -36,6 +38,23 @@ public static class PedidosEndpoints
         return resultado.Sucesso
             ? TypedResults.Created($"/pedidos/{resultado.Valor.Id}", resultado.Valor)
             : Problema(MapeadorErros.DeNegocio(resultado.Erro));
+    }
+
+    private static async Task<IResult> ListarAsync(
+        [AsParameters] ListarPedidosParametros parametros,
+        RepositorioPedidos repositorio,
+        [FromServices] TimeZoneInfo fusoDoNegocio,
+        CancellationToken cancelamento)
+    {
+        var (erros, filtro) = ValidadorListarPedidos.Validar(parametros);
+        if (filtro is null)
+        {
+            return Problema(MapeadorErros.DeValidacao(erros));
+        }
+
+        var intervalo = PeriodoNegocio.ParaIntervaloUtc(filtro.DataInicio, filtro.DataFim, fusoDoNegocio);
+        var (itens, totalItens) = await repositorio.ListarAsync(filtro, intervalo, cancelamento);
+        return TypedResults.Ok(ListaPedidosResposta.De(itens, filtro.Pagina, filtro.TamanhoPagina, totalItens));
     }
 
     private static async Task<IResult> ObterAsync(int id, RepositorioPedidos repositorio, CancellationToken cancelamento)

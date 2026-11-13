@@ -107,6 +107,61 @@ public sealed class RepositorioPedidos(FabricaConexao fabricaConexao)
         return PedidoResposta.De(cabecalho.Id, new Cliente(cabecalho.ClienteId, cabecalho.NomeCliente), cabecalho.DataPedido, itens);
     }
 
+    /// <summary>
+    /// Página de pedidos e total de pedidos que atendem ao filtro (spec §8.3–8.4), num lote com duas consultas: o
+    /// <c>COUNT(*)</c> e a página, com o mesmo WHERE. Ordem total <c>DataPedido DESC, Id DESC</c>. Quantidade de itens e
+    /// valor total vêm dos itens da própria página (<c>CROSS APPLY</c>), com o preço congelado, sem consulta por pedido.
+    /// </summary>
+    public async Task<(IReadOnlyList<PedidoResumoResposta> Itens, int TotalItens)> ListarAsync(
+        FiltroListarPedidos filtro, IntervaloUtc intervalo, CancellationToken cancelamento)
+    {
+        var (filtros, parametros) = FiltrosDaListagem(filtro.ClienteId, intervalo);
+        // OFFSET em bigint: página alta não estoura, só devolve lista vazia (§8.3).
+        parametros.Add("Deslocamento", (long)(filtro.Pagina - 1) * filtro.TamanhoPagina, DbType.Int64);
+        parametros.Add("TamanhoPagina", filtro.TamanhoPagina, DbType.Int32);
+        var sql = $"""
+            SELECT COUNT(*) FROM dbo.Pedidos AS p {filtros};
+
+            WITH Pagina AS (
+                SELECT p.Id, p.ClienteId, p.DataPedido
+                FROM dbo.Pedidos AS p
+                {filtros}
+                ORDER BY p.DataPedido DESC, p.Id DESC
+                OFFSET @Deslocamento ROWS FETCH NEXT @TamanhoPagina ROWS ONLY
+            )
+            SELECT pg.Id, pg.DataPedido, c.Id AS ClienteId, c.Nome AS NomeCliente, t.QuantidadeItens, t.ValorTotal
+            FROM Pagina AS pg
+            INNER JOIN dbo.Clientes AS c ON c.Id = pg.ClienteId
+            CROSS APPLY (
+                SELECT COUNT(*) AS QuantidadeItens, SUM(i.Quantidade * i.PrecoUnitario) AS ValorTotal
+                FROM dbo.ItensPedido AS i
+                WHERE i.PedidoId = pg.Id
+            ) AS t
+            ORDER BY pg.DataPedido DESC, pg.Id DESC;
+            """;
+
+        await using var conexao = await fabricaConexao.AbrirAsync(cancelamento);
+        await using var resultados = await conexao.QueryMultipleAsync(new CommandDefinition(
+            sql, parametros, cancellationToken: cancelamento));
+        var totalItens = await resultados.ReadSingleAsync<int>();
+        var linhas = await resultados.ReadAsync<LinhaDaListagem>();
+        return (linhas.Select(linha => linha.ParaResposta()).ToList(), totalItens);
+    }
+
+    // WHERE dinâmico só com fragmentos constantes (§8.4): os valores vão sempre como parâmetros, nunca no texto do SQL.
+    private static (string Where, DynamicParameters Parametros) FiltrosDaListagem(int? clienteId, IntervaloUtc intervalo)
+    {
+        var condicoes = new List<string>();
+        var parametros = new DynamicParameters();
+        if (clienteId is { } id)
+        {
+            condicoes.Add("p.ClienteId = @ClienteId");
+            parametros.Add("ClienteId", id, DbType.Int32);
+        }
+        FiltroDePeriodoSql.Adicionar(intervalo, condicoes, parametros);
+        return (FiltroDePeriodoSql.Where(condicoes), parametros);
+    }
+
     private static SqlConnection ConexaoDa(SqlTransaction transacao) =>
         transacao.Connection ?? throw new InvalidOperationException("A transação já foi concluída.");
 
@@ -123,4 +178,16 @@ public sealed class RepositorioPedidos(FabricaConexao fabricaConexao)
     }
 
     private sealed record CabecalhoPedido(int Id, DateTime DataPedido, int ClienteId, string NomeCliente);
+
+    private sealed record LinhaDaListagem(
+        int Id, DateTime DataPedido, int ClienteId, string NomeCliente, int QuantidadeItens, decimal ValorTotal)
+    {
+        // datetime2 chega sem Kind; o valor gravado é UTC (§4.5) e sai com "Z".
+        public PedidoResumoResposta ParaResposta() => new(
+            Id,
+            new ClienteResposta(ClienteId, NomeCliente),
+            DateTime.SpecifyKind(DataPedido, DateTimeKind.Utc),
+            QuantidadeItens,
+            ValorTotal);
+    }
 }
