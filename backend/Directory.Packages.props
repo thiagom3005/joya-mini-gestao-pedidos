@@ -14,6 +14,17 @@
   -->
   <ItemGroup Label="Testes">
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.1" />
+    <PackageVersion Include="Testcontainers.MsSql" Version="4.16.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.3" />
+  </ItemGroup>
+
+  <!--
+    Correções de segurança de dependências transitivas (fixação transitiva). Cada entrada cita o advisory.
+    System.Security.Cryptography.Pkcs: Microsoft.Data.SqlClient 7.1.1 traz a 9.0.18, afetada por
+    GHSA-846f-f764-76mx (CVE-2026-84008, alta) e GHSA-2fmv-rv2c-59x7 (CVE-2026-70162, moderada); corrigidas na 10.0.13.
+  -->
+  <ItemGroup Label="Correcoes de seguranca transitivas">
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.15" />
   </ItemGroup>
 </Project>

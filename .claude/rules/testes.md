@@ -16,7 +16,10 @@ Referência: spec §10 (catálogo UT, IT, E2E).
 - Integração: SQL Server real via Testcontainers, scripts aplicados com `sqlcmd -C -b` dentro do container.
   Execução sequencial (banco compartilhado). Limpeza antes de cada teste remove dados e triggers de teste.
   O IT-21 usa container próprio; nunca `DROP DATABASE` no banco compartilhado.
-- Asserções nunca dependem de `Id` fixo: use os ids retornados ou inseridos. Datas controladas com `FakeTimeProvider`.
+- Asserções nunca dependem de `Id` fixo: use os ids retornados ou inseridos. Datas controladas com
+  `fabrica.Relogio` (`RelogioDeTeste`), que aceita voltar no tempo; o `FakeTimeProvider` não aceita.
+- Triggers criados por teste devem se chamar `TR_Teste_*`: a limpeza remove esses, e só esses.
+- Banco de teste: `SqlServerDeTeste` usa a mesma imagem do compose e aplica os scripts com `database/aplicar-scripts.sh`.
 - Concorrência (IT-09, IT-10): largada simultânea com barreira; zero 500 é requisito; zero 503 é objetivo
   assertado. Um 503 inesperado é investigado, nunca mascarado (spec §7.5).
 - Proibido enfraquecer ou remover asserção para fazer um teste passar, e proibido marcar teste como ignorado

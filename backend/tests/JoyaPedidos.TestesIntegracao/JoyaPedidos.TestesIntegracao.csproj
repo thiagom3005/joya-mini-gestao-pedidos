@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
-    Testes de integração: endpoints HTTP em processo (WebApplicationFactory). A partir da E3 passam a usar
-    SQL Server real via Testcontainers (spec §10.4); nesta etapa não dependem de banco.
+    Testes de integração: endpoints HTTP em processo (WebApplicationFactory) contra SQL Server real via
+    Testcontainers, com a mesma imagem e os mesmos scripts do docker-compose (spec §10.1, §10.4). Requer Docker.
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -11,6 +11,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
+    <PackageReference Include="Testcontainers.MsSql" />
     <PackageReference Include="xunit.v3" />
   </ItemGroup>
 
