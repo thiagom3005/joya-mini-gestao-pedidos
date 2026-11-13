@@ -6,7 +6,9 @@
 // Uso: node .claude/hooks/verificar-hooks.mjs        (Windows, Linux ou macOS; só Node, sem dependências)
 //
 // Fixtures podem declarar "requer": ["dotnet"]; sem o comando no PATH (ex.: container só com Node), o caso é
-// pulado e contado à parte. A string "${RAIZ}" nas fixtures é trocada pela raiz do repositório.
+// pulado e contado à parte. "somenteSemFrontendInstalado": true marca um caso que só vale num clone sem `npm ci`
+// (sem frontend/node_modules); com o frontend instalado, ele também é pulado e contado à parte.
+// A string "${RAIZ}" nas fixtures é trocada pela raiz do repositório.
 
 import { readFileSync, readdirSync, existsSync, writeFileSync, unlinkSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -101,6 +103,12 @@ function comandoDisponivel(comando) {
   return disponibilidade.get(comando);
 }
 
+// Mesmo critério de pos-edicao.mjs para "frontend pronto" (package.json e node_modules presentes).
+function frontendInstalado() {
+  const pasta = join(RAIZ_PROJETO, 'frontend');
+  return existsSync(join(pasta, 'package.json')) && existsSync(join(pasta, 'node_modules'));
+}
+
 // Mesmo algoritmo de pos-edicao.mjs: uma trava por repositório e tipo ("dotnet" ou "typecheck").
 function caminhoDaTrava(tipo) {
   const repositorio = createHash('sha1').update(RAIZ_PROJETO.toLowerCase()).digest('hex').slice(0, 10);
@@ -135,7 +143,8 @@ function verificarFixtures() {
 
     for (const caso of arquivo.casos) {
       const rotulo = `${nomeArquivo} › ${caso.descricao}`;
-      if ((caso.requer ?? []).some((comando) => !comandoDisponivel(comando))) {
+      const requisitoAusente = (caso.requer ?? []).some((comando) => !comandoDisponivel(comando));
+      if (requisitoAusente || (caso.somenteSemFrontendInstalado && frontendInstalado())) {
         pulados++;
         contagem.pulados++;
         continue;

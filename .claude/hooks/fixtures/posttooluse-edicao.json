@@ -18,7 +18,7 @@
     { "descricao": "SQL não dispara verificação", "arquivo": "${RAIZ}/database/01-criar-banco.sql", "saida": 0 },
     { "descricao": ".cs fora de qualquer projeto", "arquivo": "${RAIZ}/.claude/hooks/solto.cs", "saida": 0 },
     { "descricao": "arquivo fora do repositório", "arquivo": "/fora/do/repositorio/Classe.cs", "saida": 0 },
-    { "descricao": ".tsx sem frontend pronto (sem package.json e node_modules)", "arquivo": "${RAIZ}/frontend/src/App.tsx", "saida": 0 },
+    { "descricao": ".tsx sem frontend pronto (sem package.json e node_modules)", "arquivo": "${RAIZ}/frontend/src/App.tsx", "somenteSemFrontendInstalado": true, "saida": 0 },
     { "descricao": ".ts em e2e/ é ignorado", "arquivo": "${RAIZ}/e2e/criar-pedido.spec.ts", "saida": 0 },
     { "descricao": "entrada sem file_path", "entrada": { "tool_input": {} }, "saida": 0 },
     { "descricao": "build dotnet já em andamento não dispara outro", "arquivo": "${RAIZ}/backend/src/JoyaPedidos.Dominio/Exemplo.cs", "preparar": { "trava": "dotnet", "pidDaTrava": "vivo" }, "saida": 0, "mensagemContem": ["já está em andamento"] },
