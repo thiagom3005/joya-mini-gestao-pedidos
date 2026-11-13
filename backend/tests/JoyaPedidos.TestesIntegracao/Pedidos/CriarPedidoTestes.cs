@@ -8,7 +8,8 @@ using JoyaPedidos.TestesIntegracao.Infraestrutura;
 namespace JoyaPedidos.TestesIntegracao.Pedidos;
 
 /// <summary>
-/// <c>POST /pedidos</c> ponta a ponta contra SQL Server real (spec §3.1, §5.3, §7.2): IT-01 a IT-06, IT-08 e IT-26.
+/// <c>POST /pedidos</c> ponta a ponta contra SQL Server real (spec §3.1, §5.3, §7.2): IT-01 a IT-06, IT-08, IT-25 e
+/// IT-26, mais a barreira defensiva da baixa condicional.
 /// </summary>
 public sealed class CriarPedidoTestes(FabricaApi fabrica) : IAsyncLifetime
 {
@@ -266,6 +267,80 @@ public sealed class CriarPedidoTestes(FabricaApi fabrica) : IAsyncLifetime
         var problema = await RespostaHttp.LerProblemaAsync(resposta, HttpStatusCode.UnprocessableEntity, "PRODUTO_NAO_ENCONTRADO");
         Assert.Equal([int.MaxValue], problema.GetProperty("produtosNaoEncontrados").EnumerateArray().Select(id => id.GetInt32()));
         Assert.False(problema.TryGetProperty("itensSemEstoque", out _));
+        Assert.Equal(0, await _dados.ContarPedidosAsync());
+    }
+
+    // IT-25, em duas variantes:
+    // - XACT_ABORT ligado (padrão em triggers): o erro condena a transação e o próprio SQL Server a desfaz;
+    // - XACT_ABORT desligado: a transação continua ativa com a escrita parcial (baixas e itens) e só o descarte da
+    //   transação pela aplicação a desfaz. Esta é a variante que prova o rollback da API (achado da revisão da E5).
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CriarPedido_FalhaAoGravarOSegundoItemDepoisDasBaixas_Retorna500EDesfazTudo(bool transacaoContinuaAtiva)
+    {
+        var bruno = await _dados.InserirClienteAsync("Bruno Lima");
+        var produtoA = await _dados.InserirProdutoAsync("Produto A", 10.00m, 10);
+        var produtoB = await _dados.InserirProdutoAsync("Produto B", 20.00m, 10);
+        // O trigger só lança o erro se a escrita parcial já aconteceu dentro da transação: as duas baixas feitas e o item
+        // de A gravado. Sem essas condições o pedido seria criado e o teste falharia. Ids inteiros vindos do banco são
+        // embutidos no DDL porque a definição de um trigger não aceita parâmetros.
+        var modoDeErro = transacaoContinuaAtiva ? "SET XACT_ABORT OFF;" : "";
+        await _dados.CriarTriggerDeTesteAsync("TR_Teste_FalhaNoItemB", $"""
+            CREATE TRIGGER dbo.TR_Teste_FalhaNoItemB ON dbo.ItensPedido AFTER INSERT AS
+            BEGIN
+                SET NOCOUNT ON;
+                {modoDeErro}
+                IF EXISTS (SELECT 1 FROM inserted WHERE ProdutoId = {Texto(produtoB)})
+                   AND (SELECT Estoque FROM dbo.Produtos WHERE Id = {Texto(produtoA)}) = 8
+                   AND (SELECT Estoque FROM dbo.Produtos WHERE Id = {Texto(produtoB)}) = 7
+                   AND EXISTS (SELECT 1 FROM dbo.ItensPedido AS i INNER JOIN inserted AS n ON n.PedidoId = i.PedidoId
+                               WHERE i.ProdutoId = {Texto(produtoA)})
+                    THROW 50000, N'Falha proposital do IT-25 depois da escrita parcial.', 1;
+            END
+            """);
+
+        var resposta = await PostarAsync(new { clienteId = bruno, itens = new[] { Item(produtoB, 3), Item(produtoA, 2) } });
+
+        var problema = await RespostaHttp.LerProblemaAsync(resposta, HttpStatusCode.InternalServerError, "ERRO_INTERNO");
+        Assert.Equal("Ocorreu um erro inesperado.", problema.GetProperty("detail").GetString());
+        Assert.DoesNotContain("Falha proposital", problema.ToString());
+        Assert.DoesNotContain("TR_Teste", problema.ToString());
+        Assert.Equal(10, await _dados.EstoqueAsync(produtoA));
+        Assert.Equal(10, await _dados.EstoqueAsync(produtoB));
+        Assert.Equal(0, await _dados.ContarPedidosAsync());
+        Assert.Equal(0, await _dados.ContarItensAsync());
+        Assert.True(await SessaoDeBloqueio.ProdutoLivreAsync(fabrica.Banco.StringDeConexao, produtoA));
+        Assert.True(await SessaoDeBloqueio.ProdutoLivreAsync(fabrica.Banco.StringDeConexao, produtoB));
+    }
+
+    // Barreira defensiva da spec §7.2, passo 5: se a baixa condicional não afetar linha, 409 e nenhuma baixa fica.
+    [Fact]
+    public async Task CriarPedido_BaixaCondicionalSemLinhaAfetada_Retorna409EDesfazAsBaixasAnteriores()
+    {
+        var bruno = await _dados.InserirClienteAsync("Bruno Lima");
+        var produtoA = await _dados.InserirProdutoAsync("Produto A", 10.00m, 5);
+        var produtoB = await _dados.InserirProdutoAsync("Produto B", 20.00m, 5);
+        // Simula o estoque de B se esgotando entre a leitura sob lock e a baixa (o que o lock U impede na prática):
+        // a baixa de A, feita antes, zera B dentro da mesma transação.
+        await _dados.CriarTriggerDeTesteAsync("TR_Teste_EsgotaB", $"""
+            CREATE TRIGGER dbo.TR_Teste_EsgotaB ON dbo.Produtos AFTER UPDATE AS
+            BEGIN
+                SET NOCOUNT ON;
+                IF EXISTS (SELECT 1 FROM inserted WHERE Id = {Texto(produtoA)})
+                    UPDATE dbo.Produtos SET Estoque = 0 WHERE Id = {Texto(produtoB)};
+            END
+            """);
+
+        var resposta = await PostarAsync(new { clienteId = bruno, itens = new[] { Item(produtoA, 1), Item(produtoB, 1) } });
+
+        var problema = await RespostaHttp.LerProblemaAsync(resposta, HttpStatusCode.Conflict, "ESTOQUE_INSUFICIENTE");
+        var item = Assert.Single(problema.GetProperty("itensSemEstoque").EnumerateArray().ToList());
+        Assert.Equal(produtoB, item.GetProperty("produtoId").GetInt32());
+        Assert.Equal(1, item.GetProperty("quantidadeSolicitada").GetInt32());
+        Assert.Equal(0, item.GetProperty("estoqueDisponivel").GetInt32());
+        Assert.Equal(5, await _dados.EstoqueAsync(produtoA)); // a baixa de A foi desfeita
+        Assert.Equal(5, await _dados.EstoqueAsync(produtoB)); // e a alteração do trigger também
         Assert.Equal(0, await _dados.ContarPedidosAsync());
     }
 }
