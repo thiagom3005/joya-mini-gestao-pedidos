@@ -60,8 +60,14 @@ desenvolvido com Claude Code em Spec-Driven Development. O processo de engenhari
 | Subir banco e API (clone limpo; API em http://localhost:5080) | `docker compose up --build -d` |
 | Subir banco e API mantendo a porta do SQL no loopback (MCP) | `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d` |
 | Saúde da API (200, `Healthy`; no PowerShell 5.1, `curl.exe`) | `curl http://localhost:5080/health` |
-| Logs da API | `docker compose logs api` |
+| Logs da API / do frontend | `docker compose logs api` / `docker compose logs web` |
 | Reconstruir só a imagem / subir só a API reconstruída | `docker compose build api` / `docker compose up --build -d --no-deps api` |
+| Reconstruir e subir só o frontend (com o banco no ar pelo `dev.yml`, use os dois `-f`) | `docker compose up --build -d --no-deps web` |
+| Frontend no navegador / proxy da API pelo nginx | http://localhost:3000 / `curl http://localhost:3000/api/health` |
+| Frontend: instalar dependências (exatas do lock) | `npm --prefix frontend ci` |
+| Frontend: lint, tipos e build de produção | `npm --prefix frontend run lint` / `npm --prefix frontend run typecheck` / `npm --prefix frontend run build` |
+| Frontend: servidor de desenvolvimento (http://localhost:5173, proxy `/api` → `localhost:5080`) | `npm --prefix frontend run dev` |
+| Frontend: dependências de produção vulneráveis | `npm --prefix frontend audit --omit=dev` |
 | Subir só o banco e aplicar os scripts | `docker compose up -d sqlserver db-init` |
 | Conferir (db-init deve estar `Exited (0)`) | `docker compose ps -a` |
 | Banco acessível no host (só 127.0.0.1) | `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d sqlserver db-init` |
@@ -79,7 +85,7 @@ desenvolvido com Claude Code em Spec-Driven Development. O processo de engenhari
 | Mesma verificação em Linux via Docker, no Git Bash | `MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD":/w:ro -w /w node:24-alpine node .claude/hooks/verificar-hooks.mjs` |
 | Mesma verificação em Linux via Docker, no PowerShell | `docker run --rm -v "${PWD}:/w:ro" -w /w node:24-alpine node .claude/hooks/verificar-hooks.mjs` |
 
-Comandos do frontend serão acrescentados quando existirem (entrega E10). Não invente comandos.
+Não invente comandos: acrescente aqui só os que foram executados.
 
 Notas do Docker e do banco:
 - Compose com nome de projeto `joya-pedidos`: nunca use `down -v` em outros projetos da máquina.

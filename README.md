@@ -15,14 +15,16 @@ e frontend React + TypeScript, desenvolvido com Claude Code em Spec-Driven Devel
 
 ## Como rodar com Docker
 
-Requisitos: Docker com Compose v2 e containers Linux x64. Nenhum `.env` é necessário, nem SDK .NET na máquina: a
-imagem da API é construída pelo próprio compose.
+Requisitos: Docker com Compose v2 e containers Linux x64. Nenhum `.env` é necessário, nem SDK .NET ou Node na
+máquina: as imagens da API e do frontend são construídas pelo próprio compose.
 
-> Estado atual (entrega E9): o compose sobe o **banco e a API**. O frontend entra na entrega E10.
+> Estado atual (entrega E10): o compose sobe o **banco, a API e o frontend**.
 
 ```bash
 docker compose up --build -d
 ```
+
+Depois, abra **http://localhost:3000** no navegador.
 
 - `sqlserver`: SQL Server 2022 CU28 (`mcr.microsoft.com/mssql/server:2022-CU28-ubuntu-22.04`), edição Developer,
   volume `joya-pedidos_dados-sql`, **sem porta publicada no host**.
@@ -31,9 +33,13 @@ docker compose up --build -d
 - `api`: API .NET 10 em [backend/Dockerfile](backend/Dockerfile) (build multi-stage `sdk:10.0.404-noble` →
   `aspnet:10.0.15-noble`), Kestrel na porta 8080 do container, usuário não root, `Production`. Só sobe depois que o
   `db-init` termina com sucesso; se algum script falhar, a API não sobe.
-- Confira com `docker compose ps -a`: `db-init` `Exited (0)` e `api` `Up`. Com as imagens base já baixadas, a primeira
-  subida num volume novo levou cerca de 1 minuto (inicialização do SQL Server, scripts e build da API). O primeiro
-  download das imagens base leva mais.
+- `web`: frontend React em [frontend/Dockerfile](frontend/Dockerfile) (build multi-stage `node:24.22.3-alpine3.24` →
+  `nginx:1.30.6-alpine3.24`). O nginx serve o build estático e encaminha `/api/*` para `http://api:8080/*`, removendo o
+  prefixo ([frontend/nginx.conf](frontend/nginx.conf)): navegador e API ficam na mesma origem, sem CORS. Sobe depois
+  que a API inicia; nos primeiros segundos o proxy pode responder 502, e a tela mostra o erro com "Tentar novamente".
+- Confira com `docker compose ps -a`: `db-init` `Exited (0)`, `api` e `web` `Up`. Com as imagens base já baixadas, a
+  primeira subida num volume novo levou cerca de 1 minuto (inicialização do SQL Server, scripts e build da API e do
+  frontend). O primeiro download das imagens base leva mais.
 
 API em **http://localhost:5080** (todos os endpoints da spec §5, sem prefixo):
 
@@ -46,12 +52,14 @@ próprio healthcheck no compose. No Windows PowerShell 5.1, `curl` é um alias d
 
 | Objetivo | Comando |
 |---|---|
-| Logs da API | `docker compose logs api` (acompanhar: `docker compose logs -f api`) |
+| Logs da API / do frontend | `docker compose logs api` / `docker compose logs web` (acompanhar: `-f`) |
 | Reconstruir e subir só a API depois de mudar o backend | `docker compose up --build -d --no-deps api` |
-| Só construir a imagem | `docker compose build api` |
+| Reconstruir e subir só o frontend depois de mudar `frontend/` | `docker compose up --build -d --no-deps web` |
+| Só construir as imagens | `docker compose build api` / `docker compose build web` |
 | Outra porta para a API | `API_PORTA=5090` no `.env` (ou no ambiente do shell); o padrão é `5080` |
+| Outra porta para o frontend | `WEB_PORTA=3100` no `.env` (ou no ambiente do shell); o padrão é `3000` |
 
-O `--no-deps` evita que o compose recrie também o `db-init` e o `sqlserver`. Os logs da API mostram a
+O `--no-deps` evita que o compose recrie também as dependências (`db-init` e `sqlserver`; para o `web`, a `api`). Os logs da API mostram a
 inicialização e os erros (cada 500 registra a exceção com o mesmo `traceId` da resposta); o log de cada requisição
 fica desligado (`Logging__LogLevel__Microsoft.AspNetCore=Warning` no compose).
 
@@ -83,6 +91,78 @@ Reset completo (apaga apenas o volume deste projeto e recarrega os dados de exem
 ```bash
 docker compose down -v
 ```
+
+## Como usar a interface
+
+Página única "Gestão de Pedidos" em http://localhost:3000 (spec §6):
+
+- **Listagem**: pedidos mais recentes primeiro, 10 por página, com Nº, Cliente, Data (horário de São Paulo, qualquer
+  que seja o fuso do navegador), Itens (número de produtos distintos) e Valor total em reais. **Anterior** e
+  **Próxima** navegam entre as páginas; o rodapé mostra "Página X de Y · N pedidos". Acima da tabela, um resumo
+  mostra só números devolvidos pela API: pedidos encontrados (total do filtro) e exibidos nesta página.
+- **Filtros**: cliente (os homônimos aparecem como "Nome (email)"), data inicial e data final, inclusivas, no
+  calendário de São Paulo. **Filtrar** e **Limpar** voltam à página 1. Data inicial depois da final, ou data digitada
+  pela metade, mostra o erro abaixo das datas, sem consultar a API.
+- **Novo pedido**: abre um modal que recarrega clientes e produtos (estoque atual). Escolha o cliente e os itens (até
+  50; produto sem estoque ou já escolhido em outra linha fica desabilitado; quantidade de 1 até o estoque, no máximo
+  10.000). O total exibido é uma **estimativa**: o valor oficial é o que a API grava. Ele fica no rodapé fixo do
+  modal, junto de **Cancelar** e **Criar pedido**, sempre visível com muitos itens. **Cancelar** ou Esc descartam o
+  formulário.
+- **Respostas da criação**: sucesso fecha o modal, mostra "Pedido nº X criado com sucesso." e volta à primeira
+  página sem filtros. Erros mantêm o modal e os dados digitados: validação (erros junto aos campos e um resumo),
+  cliente ou produto inexistente (listas recarregadas), estoque insuficiente ("solicitado X, disponível Y", estoques
+  recarregados), conflito momentâneo de concorrência, e falhas de servidor ou de rede (mensagem genérica; nos erros
+  500, um código para suporte).
+
+Para conferir o proxy pelo terminal (no PowerShell 5.1, use `curl.exe`):
+
+```bash
+curl http://localhost:3000/api/health
+```
+
+```bash
+curl "http://localhost:3000/api/pedidos?pagina=1&tamanhoPagina=10"
+```
+
+### Desenvolvimento do frontend
+
+Requisitos: Node 22.12 ou mais recente (testado com o 24). Com a API no ar em `localhost:5080`, o servidor do Vite
+(http://localhost:5173) faz o mesmo proxy `/api` do nginx:
+
+```bash
+npm --prefix frontend ci
+```
+
+```bash
+npm --prefix frontend run dev
+```
+
+Verificações: `npm --prefix frontend run lint`, `npm --prefix frontend run typecheck` e `npm --prefix frontend run build`.
+Dependências com versões exatas no `package.json` e no `package-lock.json`.
+
+Stack: React 19, TypeScript `strict` e Vite, sem router, biblioteca de estado ou de componentes. CSS próprio em
+[frontend/src/estilos.css](frontend/src/estilos.css), com tokens de cor, tipografia, espaçamento, sombras, raios e
+foco; `prefers-reduced-motion` respeitado. Ícones do `lucide-react` (decorativos, com `aria-hidden`; botões só com
+ícone têm nome acessível). Fontes do sistema, sem recursos externos, compatíveis com a CSP do nginx.
+
+Paleta: azuis `#142C72` (principal), `#1D3F95` (secundário) e `#0E1E4D` (profundo); laranja `#FF6A13` (hover
+`#E85C0D`); fundo `#F5F7FB`, superfícies `#FFFFFF`, bordas `#D9E1F0`; texto `#1B2559` e secundário `#667085`;
+sucesso `#16A34A`, aviso `#D97706` e erro `#DC2626`. Contraste WCAG AA medido nos pares usados: o laranja leva texto
+azul profundo (5,58:1; no hover 4,55:1), porque o branco sobre ele fica em 2,87:1; sucesso, aviso e erro puros ficam
+em bordas e detalhes, e textos e ícones usam tons derivados mais escuros (`color-mix`), com 4,86:1 ou mais.
+
+Acessibilidade: todo campo tem `<label>`; erros com `role="alert"` e ligados ao campo por `aria-describedby`; sucesso
+em região `aria-live="polite"` sempre presente; modal com `<dialog>` nativo, foco inicial no Cliente, Esc e Cancelar
+devolvem o foco a "Novo pedido"; foco visível também no modo de alto contraste do Windows. Responsividade: tabela em
+cartões até 640 px, modal como painel inferior no celular e rodapé fixo com o total estimado, que nunca cobre um campo.
+Envio sem duplicidade: "Criar pedido" fica desabilitado com "Criando…", e uma trava por `ref` barra disparos repetidos
+antes da re-renderização (4 acionamentos seguidos geram 1 POST, conferido no navegador).
+
+Validação da E10: lint, typecheck e build sem avisos; `npm audit --omit=dev` sem vulnerabilidades (as 9 moderadas de
+`npm audit` são só de dependências de desenvolvimento, do advisory GHSA-g3hv-75wg-m249 do `minimatch`); fluxos da spec
+§6.2–6.4 conferidos no navegador embutido, com respostas reais e simuladas, em larguras de 375 a 1440 px e telas
+baixas; duas revisões independentes. O frontend ainda não tem testes automatizados: os E2E (Playwright) são da E12.
+Pendências e riscos estão no registro da E10 em [docs/plan.md](docs/plan.md) §14.
 
 ## Como rodar os testes
 
