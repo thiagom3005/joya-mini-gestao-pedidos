@@ -209,6 +209,11 @@ Configuração (uma vez por máquina):
    do ambiente do Claude Code, não do `.env` do compose.
 5. Reinicie o Claude Code para carregar o `.mcp.json` com as variáveis.
 
+Se o servidor aparecer como `failed` com "connection timed out after 30000ms", o problema costuma ser o tempo de
+partida do `npx`, não a senha. Na E11 o DBHub levou 21,7 s até a primeira saída com o cache frio e 7 s com o cache
+quente, perto do limite de 30 s do cliente, que estoura com a máquina carregada. Reconecte em `/mcp` (Reconnect) ou
+aumente o limite de partida com a variável `MCP_TIMEOUT` (em milissegundos) no ambiente do Claude Code.
+
 Segurança: o login `joya_mcp` tem só `db_datareader` no `JoyaPedidos` e `VIEW SERVER PERFORMANCE STATE`; a conexão
 usa `sslmode=require` (criptografada). A senha fica em `env` do processo, nunca nos argumentos. O `.mcp.json` usa
 `cmd /c npx` (exigido pelo Claude Code no Windows nativo); em Linux ou macOS, troque por `"command": "npx"` e retire

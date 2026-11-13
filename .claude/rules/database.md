@@ -20,6 +20,10 @@ Referências: spec §4 (modelo), §9 (ranking), §11 (Docker).
   é um único batch sem `GO`, porque o IT-23 o executa via SqlClient.
 - Nomes de objetos conforme §4.2–4.3 (`PK_`, `FK_`, `CK_`, `UQ_`, `UX_`, `IX_`), sem acento.
 - `DataPedido` é `DATETIME2(0)` em UTC. Comentários com o equivalente em horário de São Paulo ajudam a revisão.
+- Sem triggers em `Produtos` e `Pedidos` fora dos testes: o repositório exige exatamente 1 linha afetada no `UPDATE`
+  condicional de estoque (o SqlClient soma linhas de triggers sem `SET NOCOUNT ON`) e usa `OUTPUT INSERTED.Id` sem
+  `INTO`, que falha (erro 334) com trigger habilitado. Precisando de trigger, troque antes por `OUTPUT ... INTO` e
+  ajuste a contagem (revisão da E11).
 
 ## Query da Parte 4
 - `consultas/ranking-2026-original.sql` é cópia **literal** do enunciado (spec §9.1). Nunca corrigir esse arquivo.
