@@ -14,6 +14,8 @@ public static class ConfiguracaoProblemDetails
         servicos.AddProblemDetails(opcoes => opcoes.CustomizeProblemDetails = contexto =>
             Padronizar(contexto.ProblemDetails, contexto.HttpContext));
 
+        // Registrado depois do escritor padrão: só é usado quando o Accept do cliente não aceita JSON.
+        servicos.AddSingleton<IProblemDetailsWriter, EscritorProblemDetailsReserva>();
         servicos.AddExceptionHandler<TratadorExcecoes>();
         return servicos;
     }
@@ -22,12 +24,13 @@ public static class ConfiguracaoProblemDetails
     /// Sem <c>codigo</c> = erro genérico (framework ou exceção não tratada): título e código padronizados em pt-BR,
     /// iguais em qualquer ambiente. Erros da aplicação sempre trazem o próprio <c>codigo</c> e título.
     /// </summary>
-    public static void Padronizar(ProblemDetails problema, HttpContext contexto)
+    private static void Padronizar(ProblemDetails problema, HttpContext contexto)
     {
         var status = problema.Status ?? contexto.Response.StatusCode;
         if (!problema.Extensions.ContainsKey(ExtensaoCodigo))
         {
             problema.Title = CodigosErroHttp.TituloGenericoParaStatus(status);
+            problema.Detail ??= CodigosErroHttp.DetalheGenericoParaStatus(status);
             problema.Extensions[ExtensaoCodigo] = CodigosErroHttp.GenericoParaStatus(status);
         }
         problema.Extensions.TryAdd(ExtensaoTraceId, IdentificadorDeRastreio(contexto));

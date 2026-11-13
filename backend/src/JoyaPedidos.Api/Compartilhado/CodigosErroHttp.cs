@@ -37,4 +37,17 @@ public static class CodigosErroHttp
         >= 400 and < 500 => "Requisição inválida",
         _ => "Erro interno",
     };
+
+    /// <summary>
+    /// Detalhe em pt-BR para erros do framework, que chegam sem <c>detail</c> (spec §5.2 lista <c>detail</c> entre os
+    /// campos padrão). Os textos de 400 e 500 são os mesmos já usados pelo tratador de exceções e por ERRO_INTERNO.
+    /// </summary>
+    public static string DetalheGenericoParaStatus(int status) => status switch
+    {
+        StatusCodes.Status404NotFound => "O recurso solicitado não existe.",
+        StatusCodes.Status405MethodNotAllowed => "O método HTTP não é permitido para este recurso.",
+        StatusCodes.Status415UnsupportedMediaType => "O tipo de conteúdo não é suportado. Envie application/json.",
+        >= 400 and < 500 => "A requisição não pôde ser interpretada.",
+        _ => "Ocorreu um erro inesperado.",
+    };
 }

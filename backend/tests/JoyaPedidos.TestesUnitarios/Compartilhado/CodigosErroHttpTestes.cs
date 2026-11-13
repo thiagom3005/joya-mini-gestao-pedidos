@@ -30,4 +30,17 @@ public sealed class CodigosErroHttpTestes
 
         Assert.Equal(tituloEsperado, titulo);
     }
+
+    [Theory]
+    [InlineData(400, "A requisição não pôde ser interpretada.")]
+    [InlineData(404, "O recurso solicitado não existe.")]
+    [InlineData(405, "O método HTTP não é permitido para este recurso.")]
+    [InlineData(415, "O tipo de conteúdo não é suportado. Envie application/json.")]
+    [InlineData(500, "Ocorreu um erro inesperado.")]
+    public void DetalheGenericoParaStatus_StatusDeErro_RetornaDetalheEmPortugues(int status, string detalheEsperado)
+    {
+        var detalhe = CodigosErroHttp.DetalheGenericoParaStatus(status);
+
+        Assert.Equal(detalheEsperado, detalhe);
+    }
 }

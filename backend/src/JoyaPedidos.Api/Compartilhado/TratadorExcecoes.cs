@@ -19,20 +19,14 @@ public sealed class TratadorExcecoes(IProblemDetailsService problemDetails, ILog
         var problema = ProblemaPara(excecao);
         Registrar(contexto, excecao, problema.Status!.Value, traceId);
 
+        // Sempre há um escritor: o de reserva cobre clientes que não aceitam JSON (ex.: Accept: text/html).
         contexto.Response.StatusCode = problema.Status.Value;
-        var escrito = await problemDetails.TryWriteAsync(new ProblemDetailsContext
+        await problemDetails.WriteAsync(new ProblemDetailsContext
         {
             HttpContext = contexto,
             ProblemDetails = problema,
             Exception = excecao,
         });
-
-        // Clientes que não aceitam JSON (ex.: Accept: text/html) também recebem o Problem Details, nunca corpo vazio.
-        if (!escrito)
-        {
-            ConfiguracaoProblemDetails.Padronizar(problema, contexto);
-            await Results.Problem(problema).ExecuteAsync(contexto);
-        }
         return true;
     }
 
