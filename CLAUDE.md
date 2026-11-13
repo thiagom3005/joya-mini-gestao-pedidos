@@ -57,7 +57,12 @@ desenvolvido com Claude Code em Spec-Driven Development. O processo de engenhari
 | Testes unitários e de integração (integração exige Docker) | `dotnet test backend/JoyaPedidos.slnx` (ou `cd backend && dotnet test`) |
 | Só um projeto de teste | `dotnet test --project backend/tests/JoyaPedidos.TestesUnitarios` |
 | Integração em ordem aleatória (repetibilidade) | `dotnet test --project backend/tests/JoyaPedidos.TestesIntegracao -- --seed 20261112` |
-| Subir o banco e aplicar os scripts | `docker compose up -d sqlserver db-init` |
+| Subir banco e API (clone limpo; API em http://localhost:5080) | `docker compose up --build -d` |
+| Subir banco e API mantendo a porta do SQL no loopback (MCP) | `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d` |
+| Saúde da API (200, `Healthy`; no PowerShell 5.1, `curl.exe`) | `curl http://localhost:5080/health` |
+| Logs da API | `docker compose logs api` |
+| Reconstruir só a imagem / subir só a API reconstruída | `docker compose build api` / `docker compose up --build -d --no-deps api` |
+| Subir só o banco e aplicar os scripts | `docker compose up -d sqlserver db-init` |
 | Conferir (db-init deve estar `Exited (0)`) | `docker compose ps -a` |
 | Banco acessível no host (só 127.0.0.1) | `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d sqlserver db-init` |
 | Reaplicar os scripts (idempotente) | `docker compose run --rm --no-deps db-init` |
@@ -74,14 +79,17 @@ desenvolvido com Claude Code em Spec-Driven Development. O processo de engenhari
 | Mesma verificação em Linux via Docker, no Git Bash | `MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD":/w:ro -w /w node:24-alpine node .claude/hooks/verificar-hooks.mjs` |
 | Mesma verificação em Linux via Docker, no PowerShell | `docker run --rm -v "${PWD}:/w:ro" -w /w node:24-alpine node .claude/hooks/verificar-hooks.mjs` |
 
-Comandos da API no Docker e do frontend serão acrescentados quando existirem (entregas E9 e E10). Não invente
-comandos.
+Comandos do frontend serão acrescentados quando existirem (entrega E10). Não invente comandos.
 
 Notas do Docker e do banco:
 - Compose com nome de projeto `joya-pedidos`: nunca use `down -v` em outros projetos da máquina.
 - A massa de desempenho (`database/performance/`) só roda no projeto isolado `joya-perf`, nunca no `joya-pedidos`.
 - O `sqlserver` roda o `sqlservr` como processo principal (parada limpa) e o banco tem `IDENTITY_CACHE = OFF`.
 - O banco nunca publica porta no compose padrão. MCP e ferramentas usam o `docker-compose.dev.yml` (loopback).
+  Com o banco no ar por esse arquivo, um `docker compose up` só com o `docker-compose.yml` recria o `sqlserver` sem a
+  porta (os dados ficam no volume, mas o MCP perde a conexão): use os dois arquivos.
+- A API (`backend/Dockerfile`) roda como usuário não root, em `Production`, com a string de conexão só no ambiente
+  (`ConnectionStrings__BancoPedidos`, montada no compose). Sem healthcheck HTTP: a imagem não tem `curl`.
 - Senha padrão do `sa` (`Joya_Dev_2026_Inseguro`): pública, insegura e só de desenvolvimento local.
 
 Notas do ambiente .NET:

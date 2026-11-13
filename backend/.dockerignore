@@ -1,0 +1,15 @@
+# Contexto de build da API (backend/): só o necessário para restaurar e publicar JoyaPedidos.Api.
+# Saídas de compilação e de testes da máquina local nunca entram na imagem.
+**/bin/
+**/obj/
+**/TestResults/
+tests/
+*.slnx
+**/*.user
+**/.vs/
+**/.vscode/
+**/.idea/
+Dockerfile
+.dockerignore
+**/.env
+**/.env.*

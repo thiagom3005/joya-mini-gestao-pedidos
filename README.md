@@ -15,29 +15,68 @@ e frontend React + TypeScript, desenvolvido com Claude Code em Spec-Driven Devel
 
 ## Como rodar com Docker
 
-Requisitos: Docker com Compose v2 e containers Linux x64. Nenhum `.env` é necessário.
+Requisitos: Docker com Compose v2 e containers Linux x64. Nenhum `.env` é necessário, nem SDK .NET na máquina: a
+imagem da API é construída pelo próprio compose.
 
-> Estado atual (entrega E3): o compose sobe **apenas o banco**. A API e o frontend entram nas entregas E9 e E10.
+> Estado atual (entrega E9): o compose sobe o **banco e a API**. O frontend entra na entrega E10.
 
 ```bash
-docker compose up -d sqlserver db-init
+docker compose up --build -d
 ```
 
 - `sqlserver`: SQL Server 2022 CU28 (`mcr.microsoft.com/mssql/server:2022-CU28-ubuntu-22.04`), edição Developer,
   volume `joya-pedidos_dados-sql`, **sem porta publicada no host**.
 - `db-init`: espera o banco ficar saudável, aplica `database/01..03*.sql` em ordem e encerra com código 0. Rodar de
   novo não duplica nada.
-- Confira com `docker compose ps -a`: `db-init` deve estar `Exited (0)`.
+- `api`: API .NET 10 em [backend/Dockerfile](backend/Dockerfile) (build multi-stage `sdk:10.0.404-noble` →
+  `aspnet:10.0.15-noble`), Kestrel na porta 8080 do container, usuário não root, `Production`. Só sobe depois que o
+  `db-init` termina com sucesso; se algum script falhar, a API não sobe.
+- Confira com `docker compose ps -a`: `db-init` `Exited (0)` e `api` `Up`. Com as imagens base já baixadas, a primeira
+  subida num volume novo levou cerca de 1 minuto (inicialização do SQL Server, scripts e build da API). O primeiro
+  download das imagens base leva mais.
 
-A senha padrão do `sa` (`Joya_Dev_2026_Inseguro`) é **pública, insegura e exclusiva de desenvolvimento local**. Para
-trocá-la, copie `.env.example` para `.env` e defina `MSSQL_SA_PASSWORD`.
+API em **http://localhost:5080** (todos os endpoints da spec §5, sem prefixo):
+
+```bash
+curl http://localhost:5080/health
+```
+
+Responde `200` com `Healthy`. O `/health` indica que a API está no ar, não que o banco responde: o SQL Server tem o
+próprio healthcheck no compose. No Windows PowerShell 5.1, `curl` é um alias de `Invoke-WebRequest`; use `curl.exe`.
+
+| Objetivo | Comando |
+|---|---|
+| Logs da API | `docker compose logs api` (acompanhar: `docker compose logs -f api`) |
+| Reconstruir e subir só a API depois de mudar o backend | `docker compose up --build -d --no-deps api` |
+| Só construir a imagem | `docker compose build api` |
+| Outra porta para a API | `API_PORTA=5090` no `.env` (ou no ambiente do shell); o padrão é `5080` |
+
+O `--no-deps` evita que o compose recrie também o `db-init` e o `sqlserver`. Os logs da API mostram a
+inicialização e os erros (cada 500 registra a exceção com o mesmo `traceId` da resposta); o log de cada requisição
+fica desligado (`Logging__LogLevel__Microsoft.AspNetCore=Warning` no compose).
+
+O build da imagem roda a auditoria NuGet do backend com avisos tratados como erro (plano, E2). Se um advisory for
+publicado depois desta entrega para um pacote usado, o `docker compose up --build` falha no `dotnet restore` com
+`NU1901`–`NU1904`. A saída é atualizar ou fixar a versão do pacote em `backend/Directory.Packages.props`; o próprio
+erro aponta o pacote e o advisory.
+
+Credenciais de desenvolvimento: a senha padrão do `sa` (`Joya_Dev_2026_Inseguro`) é **pública, insegura e exclusiva
+de desenvolvimento local**. A API usa o próprio `sa`, recebido pela variável `ConnectionStrings__BancoPedidos`
+montada no compose com essa mesma senha. É uma limitação consciente deste ambiente (spec §11.4, RSK-10): em produção
+haveria um login de privilégio mínimo e um gerenciador de segredos. Para trocar a senha, copie `.env.example` para
+`.env` e defina `MSSQL_SA_PASSWORD` (sem `$`, aspas ou `;`). Nenhuma credencial vai para a imagem; ela chega só pelo
+ambiente do container.
 
 Para acessar o banco pelo host (MCP, SSMS, Azure Data Studio), use o arquivo opt-in que publica a porta só em
 `127.0.0.1`:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d sqlserver db-init
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
 ```
+
+Se o banco já estiver no ar com esse arquivo (por exemplo, para o MCP), continue usando os **dois** arquivos. Um
+`docker compose up` só com o `docker-compose.yml` recria o `sqlserver` sem a porta. Os dados continuam no volume,
+mas o MCP perde a conexão até que você suba de novo com o `docker-compose.dev.yml`.
 
 Reset completo (apaga apenas o volume deste projeto e recarrega os dados de exemplo):
 

@@ -1,8 +1,8 @@
 # Mini Gestão de Pedidos — Docker Compose (spec §11).
-# Nesta etapa (plano E3): apenas o SQL Server e a aplicação automática dos scripts de database/.
-# A API (E9) e o frontend (E10) entram nas próximas entregas.
+# Serviços: SQL Server, aplicação automática dos scripts de database/ (db-init) e a API .NET (plano E9).
+# O frontend (web) entra na entrega E10.
 #
-# Uso:   docker compose up -d sqlserver db-init
+# Uso:   docker compose up --build -d          (API em http://localhost:5080; GET /health)
 # Reset: docker compose down -v   (apaga só o volume deste projeto: joya-pedidos_dados-sql)
 #
 # SENHA PADRÃO: "Joya_Dev_2026_Inseguro" é PÚBLICA, INSEGURA e EXCLUSIVA DE DESENVOLVIMENTO LOCAL (spec §11.4).
@@ -14,6 +14,11 @@ name: joya-pedidos
 x-imagem-sqlserver: &imagem-sqlserver mcr.microsoft.com/mssql/server:2022-CU28-ubuntu-22.04
 
 x-senha-sa: &senha-sa ${MSSQL_SA_PASSWORD:-Joya_Dev_2026_Inseguro}
+
+# String de conexão da API (spec §11.3), montada com a MESMA senha do sa acima: a API usa sa só porque este é um
+# ambiente de desenvolvimento (spec §11.4, RSK-10). TrustServerCertificate=True porque o certificado do container
+# é autoassinado. A senha não pode conter ";" (separador da string de conexão).
+x-conexao-api: &conexao-api "Server=sqlserver,1433;Database=JoyaPedidos;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Joya_Dev_2026_Inseguro};Encrypt=True;TrustServerCertificate=True"
 
 services:
   sqlserver:
@@ -62,6 +67,30 @@ services:
     entrypoint: []
     command: ["/bin/bash", "/database/aplicar-scripts.sh", "sqlserver"]
     restart: "no"
+
+  api:
+    # Build multi-stage de backend/Dockerfile: SDK .NET 10 → runtime ASP.NET 10 com tzdata, usuário não root.
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    # Só sobe depois que todos os scripts de database/ rodaram sem erro (spec §11.2). Se o db-init falhar, a API
+    # não sobe e a falha fica visível.
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ConnectionStrings__BancoPedidos: *conexao-api
+      # Sem o log de cada requisição (cerca de 12 linhas por chamada em Information). Continuam visíveis a
+      # inicialização (Microsoft.Hosting.Lifetime) e os erros da aplicação, com traceId.
+      Logging__LogLevel__Microsoft.AspNetCore: Warning
+    ports:
+      - "${API_PORTA:-5080}:8080"
+    # A API falha rápido na inicialização (fuso ou string de conexão ausentes). Até 3 novas tentativas; depois o
+    # container fica parado, com o erro em `docker compose logs api`, em vez de reiniciar para sempre.
+    # Sem healthcheck HTTP: a imagem ASP.NET não traz curl (spec §11.2).
+    restart: on-failure:3
 
 volumes:
   dados-sql:
