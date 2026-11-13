@@ -64,6 +64,10 @@ desenvolvido com Claude Code em Spec-Driven Development. O processo de engenhari
 | Script manual / login do MCP (Git Bash: prefixe `MSYS_NO_PATHCONV=1`) | `docker compose run --rm --no-deps -e JOYA_MCP_SENHA db-init /opt/mssql-tools18/bin/sqlcmd -C -b -f 65001 -S sqlserver -U sa -i /database/dev/criar-login-mcp.sql` |
 | Parar mantendo os dados | `docker compose down` |
 | Reset completo do banco deste projeto (apaga só `joya-pedidos_dados-sql`) | `docker compose down -v` |
+| Parte 4: subir o ambiente ISOLADO de desempenho (projeto `joya-perf`) | `docker compose -p joya-perf -f docker-compose.yml -f docker-compose.perf.yml up -d sqlserver db-init` |
+| Parte 4: gerar a massa (só no `joya-perf`; Git Bash: `MSYS_NO_PATHCONV=1`) | `docker compose -p joya-perf -f docker-compose.yml -f docker-compose.perf.yml run --rm --no-deps -T db-init /opt/mssql-tools18/bin/sqlcmd -C -b -f 65001 -S sqlserver -U sa -i /database/performance/gerar-massa.sql` |
+| Parte 4: medir o ranking (só no `joya-perf`; saída grande, redirecione para fora do repositório) | `docker compose -p joya-perf -f docker-compose.yml -f docker-compose.perf.yml run --rm --no-deps -T db-init /opt/mssql-tools18/bin/sqlcmd -C -b -f 65001 -y 0 -S sqlserver -U sa -d JoyaPedidos -i /database/performance/medir-ranking.sql` |
+| Parte 4: remover o ambiente de desempenho (apaga só `joya-perf_dados-sql`) | `docker compose -p joya-perf -f docker-compose.yml -f docker-compose.perf.yml down -v` |
 | Pacotes vulneráveis, inclusive transitivos | `dotnet list backend/JoyaPedidos.slnx package --vulnerable --include-transitive` |
 | SDK e runtimes desatualizados | `dotnet sdk check` |
 | Verificar os hooks do Claude (qualquer SO com Node) | `node .claude/hooks/verificar-hooks.mjs` |
@@ -75,6 +79,7 @@ comandos.
 
 Notas do Docker e do banco:
 - Compose com nome de projeto `joya-pedidos`: nunca use `down -v` em outros projetos da máquina.
+- A massa de desempenho (`database/performance/`) só roda no projeto isolado `joya-perf`, nunca no `joya-pedidos`.
 - O `sqlserver` roda o `sqlservr` como processo principal (parada limpa) e o banco tem `IDENTITY_CACHE = OFF`.
 - O banco nunca publica porta no compose padrão. MCP e ferramentas usam o `docker-compose.dev.yml` (loopback).
 - Senha padrão do `sa` (`Joya_Dev_2026_Inseguro`): pública, insegura e só de desenvolvimento local.

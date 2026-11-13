@@ -1,0 +1,19 @@
+# Ambiente ISOLADO de medição da Parte 4 (spec §9.6, plano E8). Projeto Compose próprio ("joya-perf"): containers,
+# rede e volume (joya-perf_dados-sql) separados do projeto joya-pedidos. A massa de desempenho nunca toca o banco de
+# desenvolvimento, o login do MCP nem o seed da demonstração. Sem porta publicada no host: tudo roda pelo sqlcmd do
+# serviço db-init, dentro da rede do próprio projeto.
+#
+# Use SEMPRE os dois arquivos e o -p explícito (o nome abaixo também protege quem esquecer o -p):
+#   docker compose -p joya-perf -f docker-compose.yml -f docker-compose.perf.yml up -d sqlserver db-init
+#   docker compose -p joya-perf -f docker-compose.yml -f docker-compose.perf.yml down -v   (apaga só joya-perf_dados-sql)
+
+name: joya-perf
+
+services:
+  sqlserver:
+    # Identidade verificável de dentro do SQL Server: gerar-massa.sql e medir-ranking.sql só rodam se
+    # SERVERPROPERTY('MachineName') for este nome. O compose padrão não define hostname (o do dev é aleatório).
+    hostname: joya-perf-sqlserver
+    environment:
+      # Teto de memória fixo: medições reprodutíveis e sem disputar memória com o banco de desenvolvimento.
+      MSSQL_MEMORY_LIMIT_MB: "2048"
