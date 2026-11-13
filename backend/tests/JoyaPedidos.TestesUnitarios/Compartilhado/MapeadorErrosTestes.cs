@@ -57,6 +57,18 @@ public sealed class MapeadorErrosTestes
         Assert.Equal(itens, (IReadOnlyList<ItemSemEstoque>)erro.Extensoes["itensSemEstoque"]);
     }
 
+    // UT-18: pedido inexistente na consulta por id (spec §5.5)
+    [Fact]
+    public void PedidoNaoEncontrado_IdInexistente_Retorna404ComOIdNoDetalhe()
+    {
+        var erro = MapeadorErros.PedidoNaoEncontrado(1024);
+
+        Assert.Equal((404, "PEDIDO_NAO_ENCONTRADO"), (erro.Status, erro.Codigo));
+        Assert.Equal("Pedido não encontrado", erro.Titulo);
+        Assert.Equal("O pedido 1024 não existe.", erro.Detalhe);
+        Assert.Empty(erro.Extensoes);
+    }
+
     // UT-18: erro SQL pelo número
     [Fact]
     public void DeErroSql_1205VitimaDeDeadlock_Retorna503ConflitoConcorrencia()

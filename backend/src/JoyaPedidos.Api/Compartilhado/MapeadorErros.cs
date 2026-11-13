@@ -75,6 +75,14 @@ public static class MapeadorErros
         _ => throw new ArgumentOutOfRangeException(nameof(erro), erro.GetType().Name, "Erro de negócio sem mapeamento HTTP."),
     };
 
+    /// <summary>404 <c>PEDIDO_NAO_ENCONTRADO</c> para <c>GET /pedidos/{id}</c> com id numérico inexistente (spec §5.5).</summary>
+    public static ErroHttp PedidoNaoEncontrado(int pedidoId) => new(
+        StatusCodes.Status404NotFound,
+        CodigosErroHttp.PedidoNaoEncontrado,
+        "Pedido não encontrado",
+        string.Create(CultureInfo.InvariantCulture, $"O pedido {pedidoId} não existe."),
+        SemExtensoes);
+
     /// <summary>
     /// Erro do SQL Server pelo número (sem depender de <c>SqlException</c>): 1205 (vítima de deadlock) vira 503
     /// <c>CONFLITO_CONCORRENCIA</c>, sem retry automático (§7.5); qualquer outro vira 500 <c>ERRO_INTERNO</c>.

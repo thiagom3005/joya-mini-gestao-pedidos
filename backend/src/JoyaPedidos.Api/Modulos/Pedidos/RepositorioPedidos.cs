@@ -1,5 +1,7 @@
 using System.Data;
 using Dapper;
+using JoyaPedidos.Api.Compartilhado;
+using JoyaPedidos.Api.Modulos.Pedidos.Contratos;
 using JoyaPedidos.Dominio;
 using Microsoft.Data.SqlClient;
 
@@ -9,7 +11,7 @@ namespace JoyaPedidos.Api.Modulos.Pedidos;
 /// SQL explícito e parametrizado de pedidos (Dapper). Os comandos da criação recebem a transação do
 /// <see cref="ServicoPedidos"/> e rodam na conexão dela, um comando por produto, como exige a spec §7.2.
 /// </summary>
-public sealed class RepositorioPedidos
+public sealed class RepositorioPedidos(FabricaConexao fabricaConexao)
 {
     /// <summary>RN-01: leitura simples (lock S liberado ao fim da leitura); nenhum produto foi bloqueado ainda.</summary>
     public Task<Cliente?> ObterClienteAsync(int clienteId, SqlTransaction transacao, CancellationToken cancelamento) =>
@@ -76,6 +78,35 @@ public sealed class RepositorioPedidos
             transacao,
             cancellationToken: cancelamento));
 
+    /// <summary>Pedido gravado com os preços congelados e o nome atual de cliente e produtos; <c>null</c> se não existir.</summary>
+    public async Task<PedidoResposta?> ObterPedidoAsync(int pedidoId, CancellationToken cancelamento)
+    {
+        const string sql = """
+            SELECT p.Id, p.DataPedido, c.Id AS ClienteId, c.Nome AS NomeCliente
+            FROM dbo.Pedidos AS p
+            INNER JOIN dbo.Clientes AS c ON c.Id = p.ClienteId
+            WHERE p.Id = @PedidoId;
+
+            SELECT i.ProdutoId, pr.Nome AS NomeProduto, i.Quantidade, i.PrecoUnitario
+            FROM dbo.ItensPedido AS i
+            INNER JOIN dbo.Produtos AS pr ON pr.Id = i.ProdutoId
+            WHERE i.PedidoId = @PedidoId
+            ORDER BY i.ProdutoId;
+            """;
+
+        await using var conexao = await fabricaConexao.AbrirAsync(cancelamento);
+        await using var resultados = await conexao.QueryMultipleAsync(new CommandDefinition(
+            sql, new { PedidoId = pedidoId }, cancellationToken: cancelamento));
+
+        var cabecalho = await resultados.ReadSingleOrDefaultAsync<CabecalhoPedido>();
+        if (cabecalho is null)
+        {
+            return null;
+        }
+        var itens = await resultados.ReadAsync<ItemPedido>();
+        return PedidoResposta.De(cabecalho.Id, new Cliente(cabecalho.ClienteId, cabecalho.NomeCliente), cabecalho.DataPedido, itens);
+    }
+
     private static SqlConnection ConexaoDa(SqlTransaction transacao) =>
         transacao.Connection ?? throw new InvalidOperationException("A transação já foi concluída.");
 
@@ -90,4 +121,6 @@ public sealed class RepositorioPedidos
         parametros.Add("PrecoUnitario", item.PrecoUnitario, DbType.Decimal, precision: 18, scale: 2);
         return parametros;
     }
+
+    private sealed record CabecalhoPedido(int Id, DateTime DataPedido, int ClienteId, string NomeCliente);
 }

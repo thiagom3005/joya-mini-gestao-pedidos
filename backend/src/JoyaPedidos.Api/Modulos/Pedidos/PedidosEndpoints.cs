@@ -5,7 +5,7 @@ using JoyaPedidos.Dominio;
 namespace JoyaPedidos.Api.Modulos.Pedidos;
 
 /// <summary>
-/// Rotas de pedidos (spec §5.3). Só mapeiam HTTP: validam o formato, chamam serviço ou repositório e convertem
+/// Rotas de pedidos (spec §5.3 e §5.5). Só mapeiam HTTP: validam o formato, chamam serviço ou repositório e convertem
 /// o resultado. Erros saem como Problem Details pelo <see cref="MapeadorErros"/>.
 /// </summary>
 public static class PedidosEndpoints
@@ -18,6 +18,7 @@ public static class PedidosEndpoints
     {
         var pedidos = rotas.MapGroup("/pedidos");
         pedidos.MapPost("", CriarAsync);
+        pedidos.MapGet("/{id:int}", ObterAsync);
         return rotas;
     }
 
@@ -35,6 +36,12 @@ public static class PedidosEndpoints
         return resultado.Sucesso
             ? TypedResults.Created($"/pedidos/{resultado.Valor.Id}", resultado.Valor)
             : Problema(MapeadorErros.DeNegocio(resultado.Erro));
+    }
+
+    private static async Task<IResult> ObterAsync(int id, RepositorioPedidos repositorio, CancellationToken cancelamento)
+    {
+        var pedido = await repositorio.ObterPedidoAsync(id, cancelamento);
+        return pedido is null ? Problema(MapeadorErros.PedidoNaoEncontrado(id)) : TypedResults.Ok(pedido);
     }
 
     // O validador já garantiu cliente, itens, produtos e quantidades presentes: os valores são lidos sem nova checagem.
