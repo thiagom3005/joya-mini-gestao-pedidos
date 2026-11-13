@@ -1,0 +1,30 @@
+Rodadas por passada (CPU/decorrido em ms, 3 rodadas medidas):
+V0 original                                                medicao-passada-A: 806/169 797/166 875/176 | medicao-passada-B: 1147/368 1042/252 947/182 | medicao-passada-C: 1346/274 1343/284 1494/315 | medicao-passada-D: 848/192 828/165 776/158 | medicao-passada-E: 1208/357 963/191 891/198
+V1 original com intervalo                                  medicao-passada-A: 647/137 613/100 599/103 | medicao-passada-B: 695/127 773/155 657/138 | medicao-passada-C: 1021/171 909/163 853/142 | medicao-passada-D: 555/97 536/89 637/140 | medicao-passada-E: 520/99 547/90 574/116
+V0 MAXDOP 1 (diagnostico)                                  medicao-passada-A: 278/283 234/243 231/238 | medicao-passada-B: 244/245 219/227 223/232 | medicao-passada-C: 339/346 349/353 264/267 | medicao-passada-D: 241/244 249/248 247/254 | medicao-passada-E: 254/258 295/301 330/334
+V1 MAXDOP 1 (diagnostico)                                  medicao-passada-A: 170/177 156/157 150/150 | medicao-passada-B: 148/152 148/152 148/150 | medicao-passada-C: 152/157 157/157 160/159 | medicao-passada-D: 194/198 224/226 186/193 | medicao-passada-E: 161/162 170/170 161/162
+V2 corrigida                                               medicao-passada-A: 55/56 50/56 46/55 | medicao-passada-B: 76/83 89/91 94/95 | medicao-passada-C: 67/73 64/73 71/75 | medicao-passada-D: 60/60 50/59 53/59 | medicao-passada-E: 56/63 54/60 54/59
+V2 parametrizada datetime2(0)                              medicao-passada-A: 61/63 61/80 59/61 | medicao-passada-B: 68/71 65/68 67/67 | medicao-passada-C: 77/86 88/94 150/152 | medicao-passada-D: 53/61 63/65 57/61 | medicao-passada-E: 54/61 55/59 65/65
+V2 parametrizada datetime2(7)                              medicao-passada-A: 60/62 59/60 60/61 | medicao-passada-B: 61/68 63/64 59/61 | medicao-passada-C: 66/75 60/69 61/67 | medicao-passada-D: 52/64 58/64 63/63 | medicao-passada-E: 57/62 56/60 57/60
+V2 variaveis locais                                        medicao-passada-A: 53/57 57/60 48/59 | medicao-passada-B: 62/62 51/57 54/63 | medicao-passada-C: 61/62 57/61 46/60 | medicao-passada-D: 56/61 54/64 81/83 | medicao-passada-E: 52/55 49/54 44/53
+API top 5 datetime2(7)                                     medicao-passada-A: 62/63 59/61 62/62 | medicao-passada-B: 55/62 55/59 58/60 | medicao-passada-C: 50/58 44/54 53/53 | medicao-passada-D: 65/69 56/65 63/63 | medicao-passada-E: 45/53 56/56 62/63
+V2 corrigida SEM IX_Pedidos_DataPedido                     medicao-passada-A: 82/92 83/91 92/97 | medicao-passada-B: 85/92 86/91 86/93 | medicao-passada-C: 88/90 89/91 80/89 | medicao-passada-D: 89/95 85/90 86/90 | medicao-passada-E: 91/91 81/89 83/89
+V2 parametrizada datetime2(7) SEM IX_Pedidos_DataPedido    medicao-passada-A: 90/98 104/110 112/119 | medicao-passada-B: 99/98 100/101 109/113 | medicao-passada-C: 99/99 91/92 90/92 | medicao-passada-D: 91/96 95/99 87/95 | medicao-passada-E: 99/106 95/109 112/119
+V0 original SEM IX_Pedidos_DataPedido                      medicao-passada-A: 858/204 1008/254 926/195 | medicao-passada-B: 912/207 951/175 906/188 | medicao-passada-C: 654/131 825/154 910/212 | medicao-passada-D: 707/172 828/192 852/187 | medicao-passada-E: 999/245 942/194 978/194
+
+Consolidado (mediana das medianas das passadas; faixa = mÃ­nimo..mÃ¡ximo das medianas):
+
+Variante                                                CpuMs CpuFaixa  DecorridoMs DecFaixa Leituras                                                        Total
+--------                                                ----- --------  ----------- -------- --------                                                        -----
+V0 original                                               963 806..1346         198 165..284 Clientes=46 ItensPedido=1475 Pedidos=895 Workfile=0 Worktable=0 2416
+V1 original com intervalo                                 613 547..909          103 97..163  Clientes=46 ItensPedido=1475 Pedidos=102 Workfile=0 Worktable=0 1623
+V0 MAXDOP 1 (diagnostico)                                 247 223..339          248 232..346 Clientes=17 ItensPedido=1398 Pedidos=300 Workfile=0 Worktable=0 1715
+V1 MAXDOP 1 (diagnostico)                                 157 148..194          157 152..198 Clientes=17 ItensPedido=1398 Pedidos=102 Workfile=0 Worktable=0 1517
+V2 corrigida                                               54 50..89             60 56..91   Clientes=17 ItensPedido=1398 Pedidos=102 Worktable=0            1517
+V2 parametrizada datetime2(0)                              61 55..88             63 61..94   Clientes=17 ItensPedido=1398 Pedidos=102 Worktable=0            1517
+V2 parametrizada datetime2(7)                              60 57..61             64 60..69   Clientes=17 ItensPedido=1398 Pedidos=102 Worktable=0            1517
+V2 variaveis locais                                        54 49..57             61 54..64   Clientes=17 ItensPedido=1398 Pedidos=102 Worktable=0            1517
+API top 5 datetime2(7)                                     56 50..63             60 54..65   Clientes=10 ItensPedido=1398 Pedidos=102 Worktable=0            1510
+V2 corrigida SEM IX_Pedidos_DataPedido                     86 83..88             90 89..92   Clientes=17 ItensPedido=1398 Pedidos=344 Worktable=0            1759
+V2 parametrizada datetime2(7) SEM IX_Pedidos_DataPedido    99 91..104           101 92..110  Clientes=17 ItensPedido=1398 Pedidos=344 Worktable=0            1759
+V0 original SEM IX_Pedidos_DataPedido                     912 825..978          188 154..204 Clientes=46 ItensPedido=1475 Pedidos=895 Workfile=0 Worktable=0 2416

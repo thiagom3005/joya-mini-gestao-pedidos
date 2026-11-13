@@ -1,0 +1,687 @@
+### AMBIENTE
+joya-perf-sqlserver 16.0.4325.4 CU28 12 2048 0 0 5 160 OFF BATCH_MODE_MEMORY_GRANT_FEEDBACK=0 BATCH_MODE_ON_ROWSTORE=1 CE_FEEDBACK=0 DOP_FEEDBACK=0 MEMORY_GRANT_FEEDBACK_PERCENTILE_GRANT=0 MEMORY_GRANT_FEEDBACK_PERSISTENCE=0 ROW_MODE_MEMORY_GRANT_FEEDBACK=0
+### MASSA
+1210 600 50 262 120033 360052 2.9996084410120 2024-01-01 03:00:00 2027-01-01 02:54:51
+### PEDIDOS POR ANO (local = UTC-3; UTC = YEAR da coluna)
+2024 40073 40060
+2025 39978 39977
+2026 39982 39983
+2027 NULL 13
+### TAMANHO DOS INDICES
+Clientes PK_Clientes CLUSTERED 1210 17 .132812
+Clientes UQ_Clientes_Email NONCLUSTERED 1210 12 .093750
+ItensPedido PK_ItensPedido CLUSTERED 360052 1547 12.085937
+ItensPedido UX_ItensPedido_PedidoId_ProdutoId NONCLUSTERED 360052 1410 11.015625
+Pedidos PK_Pedidos CLUSTERED 120033 344 2.687500
+Pedidos IX_Pedidos_ClienteId_DataPedido NONCLUSTERED 120033 300 2.343750
+Pedidos IX_Pedidos_DataPedido NONCLUSTERED 120033 314 2.453125
+Produtos PK_Produtos CLUSTERED 262 5 .039062
+### V0 original | aquecimento
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 8 ms.
+Table 'Clientes'. Scan count 13, logical reads 46, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 13, logical reads 895, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 13, logical reads 1475, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 1026 ms,  elapsed time = 323 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V0 original | rodada 1
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 13, logical reads 46, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 13, logical reads 895, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 13, logical reads 1475, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 1208 ms,  elapsed time = 357 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V0 original | rodada 2
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 13, logical reads 46, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 13, logical reads 895, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 13, logical reads 1475, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 963 ms,  elapsed time = 191 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V0 original | rodada 3
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 13, logical reads 46, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 13, logical reads 895, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 13, logical reads 1475, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 891 ms,  elapsed time = 198 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V0 original | plano real
+### V0 original | fim
+### V1 original com intervalo | aquecimento
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 9 ms.
+Table 'Clientes'. Scan count 13, logical reads 46, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 13, logical reads 1475, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 544 ms,  elapsed time = 92 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V1 original com intervalo | rodada 1
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 13, logical reads 46, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 13, logical reads 1475, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 520 ms,  elapsed time = 99 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V1 original com intervalo | rodada 2
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 13, logical reads 46, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 13, logical reads 1475, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 547 ms,  elapsed time = 90 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V1 original com intervalo | rodada 3
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 13, logical reads 46, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 13, logical reads 1475, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 574 ms,  elapsed time = 116 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V1 original com intervalo | plano real
+### V1 original com intervalo | fim
+### V0 MAXDOP 1 (diagnostico) | aquecimento
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 7 ms.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 300, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 268 ms,  elapsed time = 267 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V0 MAXDOP 1 (diagnostico) | rodada 1
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 300, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 254 ms,  elapsed time = 258 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V0 MAXDOP 1 (diagnostico) | rodada 2
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 300, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 295 ms,  elapsed time = 301 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V0 MAXDOP 1 (diagnostico) | rodada 3
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 300, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 330 ms,  elapsed time = 334 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V0 MAXDOP 1 (diagnostico) | plano real
+### V0 MAXDOP 1 (diagnostico) | fim
+### V1 MAXDOP 1 (diagnostico) | aquecimento
+SQL Server parse and compile time:
+   CPU time = 1 ms, elapsed time = 6 ms.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 180 ms,  elapsed time = 176 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V1 MAXDOP 1 (diagnostico) | rodada 1
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 161 ms,  elapsed time = 162 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V1 MAXDOP 1 (diagnostico) | rodada 2
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 170 ms,  elapsed time = 170 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V1 MAXDOP 1 (diagnostico) | rodada 3
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 161 ms,  elapsed time = 162 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V1 MAXDOP 1 (diagnostico) | plano real
+### V1 MAXDOP 1 (diagnostico) | fim
+### V2 corrigida | aquecimento
+SQL Server parse and compile time:
+   CPU time = 8 ms, elapsed time = 10 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 60 ms,  elapsed time = 61 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 corrigida | rodada 1
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 56 ms,  elapsed time = 63 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 corrigida | rodada 2
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 54 ms,  elapsed time = 60 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 corrigida | rodada 3
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 54 ms,  elapsed time = 59 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 corrigida | plano real
+### V2 corrigida | fim
+### V2 parametrizada datetime2(0) | aquecimento
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 12 ms, elapsed time = 12 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 50 ms,  elapsed time = 56 ms.
+ SQL Server Execution Times:
+   CPU time = 62 ms,  elapsed time = 69 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 parametrizada datetime2(0) | rodada 1
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 54 ms,  elapsed time = 60 ms.
+ SQL Server Execution Times:
+   CPU time = 54 ms,  elapsed time = 61 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 parametrizada datetime2(0) | rodada 2
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 55 ms,  elapsed time = 59 ms.
+ SQL Server Execution Times:
+   CPU time = 55 ms,  elapsed time = 59 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 parametrizada datetime2(0) | rodada 3
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 65 ms,  elapsed time = 64 ms.
+ SQL Server Execution Times:
+   CPU time = 65 ms,  elapsed time = 65 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 parametrizada datetime2(0) | plano real
+### V2 parametrizada datetime2(0) | fim
+### V2 parametrizada datetime2(7) | aquecimento
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 4 ms, elapsed time = 11 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 70 ms,  elapsed time = 65 ms.
+ SQL Server Execution Times:
+   CPU time = 74 ms,  elapsed time = 77 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 parametrizada datetime2(7) | rodada 1
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 57 ms,  elapsed time = 62 ms.
+ SQL Server Execution Times:
+   CPU time = 57 ms,  elapsed time = 62 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 parametrizada datetime2(7) | rodada 2
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 56 ms,  elapsed time = 60 ms.
+ SQL Server Execution Times:
+   CPU time = 56 ms,  elapsed time = 60 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 parametrizada datetime2(7) | rodada 3
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 57 ms,  elapsed time = 59 ms.
+ SQL Server Execution Times:
+   CPU time = 57 ms,  elapsed time = 60 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 parametrizada datetime2(7) | plano real
+### V2 parametrizada datetime2(7) | fim
+### V2 variaveis locais | aquecimento
+SQL Server parse and compile time:
+   CPU time = 6 ms, elapsed time = 11 ms.
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 0 ms.
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 50 ms,  elapsed time = 54 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 variaveis locais | rodada 1
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 0 ms.
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 52 ms,  elapsed time = 55 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 variaveis locais | rodada 2
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 0 ms.
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 49 ms,  elapsed time = 54 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 variaveis locais | rodada 3
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 0 ms.
+ SQL Server Execution Times:
+   CPU time = 0 ms,  elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 44 ms,  elapsed time = 53 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 variaveis locais | plano real
+### V2 variaveis locais | fim
+### API top 5 datetime2(7) | aquecimento
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 6 ms, elapsed time = 10 ms.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Clientes'. Scan count 0, logical reads 10, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 50 ms,  elapsed time = 53 ms.
+ SQL Server Execution Times:
+   CPU time = 56 ms,  elapsed time = 64 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### API top 5 datetime2(7) | rodada 1
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Clientes'. Scan count 0, logical reads 10, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 45 ms,  elapsed time = 52 ms.
+ SQL Server Execution Times:
+   CPU time = 45 ms,  elapsed time = 53 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### API top 5 datetime2(7) | rodada 2
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Clientes'. Scan count 0, logical reads 10, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 56 ms,  elapsed time = 56 ms.
+ SQL Server Execution Times:
+   CPU time = 56 ms,  elapsed time = 56 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### API top 5 datetime2(7) | rodada 3
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Clientes'. Scan count 0, logical reads 10, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 102, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 62 ms,  elapsed time = 63 ms.
+ SQL Server Execution Times:
+   CPU time = 62 ms,  elapsed time = 63 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### API top 5 datetime2(7) | plano real
+### API top 5 datetime2(7) | fim
+### Removendo IX_Pedidos_DataPedido (somente neste banco isolado)
+### V2 corrigida SEM IX_Pedidos_DataPedido | aquecimento
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 3 ms, elapsed time = 10 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 344, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 91 ms,  elapsed time = 93 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 corrigida SEM IX_Pedidos_DataPedido | rodada 1
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 344, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 91 ms,  elapsed time = 91 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 corrigida SEM IX_Pedidos_DataPedido | rodada 2
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 344, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 81 ms,  elapsed time = 89 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 corrigida SEM IX_Pedidos_DataPedido | rodada 3
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 344, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 83 ms,  elapsed time = 89 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 corrigida SEM IX_Pedidos_DataPedido | plano real
+### V2 corrigida SEM IX_Pedidos_DataPedido | fim
+### V2 parametrizada datetime2(7) SEM IX_Pedidos_DataPedido | aquecimento
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 5 ms, elapsed time = 10 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 344, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 100 ms,  elapsed time = 94 ms.
+ SQL Server Execution Times:
+   CPU time = 105 ms,  elapsed time = 105 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 parametrizada datetime2(7) SEM IX_Pedidos_DataPedido | rodada 1
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 344, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 99 ms,  elapsed time = 106 ms.
+ SQL Server Execution Times:
+   CPU time = 99 ms,  elapsed time = 106 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 parametrizada datetime2(7) SEM IX_Pedidos_DataPedido | rodada 2
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 344, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 95 ms,  elapsed time = 109 ms.
+ SQL Server Execution Times:
+   CPU time = 95 ms,  elapsed time = 109 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 parametrizada datetime2(7) SEM IX_Pedidos_DataPedido | rodada 3
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 1, logical reads 17, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 1, logical reads 1398, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 1, logical reads 344, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 112 ms,  elapsed time = 119 ms.
+ SQL Server Execution Times:
+   CPU time = 112 ms,  elapsed time = 119 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V2 parametrizada datetime2(7) SEM IX_Pedidos_DataPedido | plano real
+### V2 parametrizada datetime2(7) SEM IX_Pedidos_DataPedido | fim
+### V0 original SEM IX_Pedidos_DataPedido | aquecimento
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+SQL Server parse and compile time:
+   CPU time = 9 ms, elapsed time = 12 ms.
+Table 'Clientes'. Scan count 13, logical reads 46, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 13, logical reads 895, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 13, logical reads 1475, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 904 ms,  elapsed time = 210 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V0 original SEM IX_Pedidos_DataPedido | rodada 1
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 13, logical reads 46, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 13, logical reads 895, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 13, logical reads 1475, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 999 ms,  elapsed time = 245 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V0 original SEM IX_Pedidos_DataPedido | rodada 2
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 13, logical reads 46, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 13, logical reads 895, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 13, logical reads 1475, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 942 ms,  elapsed time = 194 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V0 original SEM IX_Pedidos_DataPedido | rodada 3
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+Table 'Clientes'. Scan count 13, logical reads 46, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Pedidos'. Scan count 13, logical reads 895, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Workfile'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'Worktable'. Scan count 0, logical reads 0, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+Table 'ItensPedido'. Scan count 13, logical reads 1475, physical reads 0, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+ SQL Server Execution Times:
+   CPU time = 978 ms,  elapsed time = 194 ms.
+SQL Server parse and compile time:
+   CPU time = 0 ms, elapsed time = 0 ms.
+### V0 original SEM IX_Pedidos_DataPedido | plano real
+### V0 original SEM IX_Pedidos_DataPedido | fim
+### Recriando IX_Pedidos_DataPedido (mesma definição de 02-criar-tabelas.sql)
+### FIM

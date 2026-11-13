@@ -238,8 +238,318 @@ seria vazamento de informação numa instância compartilhada.
 
 ## Parte 4: debug da query de ranking
 
-_A preencher na entrega E8: o que estava errado, como foi investigado (plano de execução, índices), a query
-corrigida e as medições obtidas._
+Entrega E8 (13/11/2026). Arquivos: [ranking-2026-original.sql](database/consultas/ranking-2026-original.sql),
+[ranking-2026-corrigida.sql](database/consultas/ranking-2026-corrigida.sql), [gerar-massa.sql](database/performance/gerar-massa.sql),
+[medir-ranking.sql](database/performance/medir-ranking.sql) e as evidências em [docs/evidencias/parte4](docs/evidencias/parte4).
+
+### Query original (literal do enunciado)
+
+```sql
+SELECT c.Nome, SUM(i.Quantidade * i.PrecoUnitario) AS Total
+FROM Clientes c
+LEFT JOIN Pedidos p ON p.ClienteId = c.Id
+LEFT JOIN ItensPedido i ON i.PedidoId = p.Id
+WHERE YEAR(p.DataPedido) = 2026
+GROUP BY c.Nome
+ORDER BY Total
+```
+
+O arquivo é idêntico a esse texto; um teste compara o arquivo com o bloco da spec §9.1 (CA-12).
+
+### O que estava errado (D1–D6)
+
+| # | Tipo | Defeito | Efeito | Comprovação |
+|---|---|---|---|---|
+| D1 | Funcional | `ORDER BY Total` é crescente. | Lista primeiro quem **menos** comprou. | IT-24: totais em ordem crescente, a primeira linha com 400,00. |
+| D2 | Funcional | `GROUP BY c.Nome`. | Homônimos viram uma linha só, com os totais somados; sem `Id`, não identifica o cliente. | IT-24: uma "Ana Souza" com 550,00 (300,00 + 250,00). No seed, via MCP: 1.952,35. |
+| D3 | Funcional / clareza | `LEFT JOIN Pedidos` seguido de `WHERE` sobre `p.DataPedido`. | O `WHERE` descarta quem não tem pedido: a junção externa devolve o mesmo que uma interna, e o texto sugere uma intenção que não se cumpre. Pelo `LEFT JOIN ItensPedido`, pedido sem item daria `Total` nulo, que vem primeiro. | Plano real (ver abaixo): com `YEAR()`, a junção com `Pedidos` continua `Left Outer Join` e o filtro só vem depois dela. |
+| D4 | Funcional | `YEAR(p.DataPedido)` sobre instantes UTC. | Usa o ano UTC, não o ano civil de São Paulo: entram os pedidos de 31/12/2025 21:00–23:59 e saem os de 31/12/2026 21:00–23:59 (horário local). | IT-24: Fábio (31/12/2025 23:59:59 local) entra com 1.000,00 e Elisa (31/12/2026 23:59:59 local) sai. Na massa: 2026 local = 39.982 pedidos; 2026 UTC = 39.983. |
+| D5 | Determinismo | Sem desempate nem posição. | Ordem de empates instável. | IT-24 não verifica o nome nas duas primeiras linhas (Carla e Diego empatam em 400,00). |
+| D6 | Desempenho (hipótese) | Função sobre a coluna (`YEAR(coluna)`). | Predicado não *SARGable*: impede a busca por intervalo em índice de `DataPedido`. | **Confirmada** na massa: `Index Scan` de todos os 120.033 pedidos + `Filter`, contra `Index Seek` de 39.983 na V1. |
+
+**Observação sobre o D3: semântica relacional × plano físico.** Na semântica relacional, o `LEFT JOIN Pedidos`
+seguido de `WHERE` sobre `p.DataPedido` equivale a uma junção interna: o `WHERE` descarta as linhas sem pedido, e o
+resultado é o mesmo. A spec (§9.2) acrescenta que o otimizador faz essa simplificação. **Nos planos físicos
+observados, ele não faz**:
+- Com `YEAR()`, o plano real mantém `Left Outer Join` com `Pedidos` e aplica o `Filter` depois: na V0 paralela
+  (`Hash Match`), na V0 serial (`Merge Join`) e no seed (`Nested Loops`, via MCP).
+- Só trocando o predicado por intervalo (V1) a junção vira `Inner Join`.
+- Evidências: [v0-original.sqlplan](docs/evidencias/parte4/planos/v0-original.sqlplan),
+  [v0-maxdop-1-diagnostico.sqlplan](docs/evidencias/parte4/planos/v0-maxdop-1-diagnostico.sqlplan),
+  [v1-original-com-intervalo.sqlplan](docs/evidencias/parte4/planos/v1-original-com-intervalo.sqlplan) e
+  [mcp-banco-desenvolvimento.md](docs/evidencias/parte4/mcp-banco-desenvolvimento.md).
+
+O efeito no resultado é o que a spec descreve; só a afirmação sobre o otimizador não vale para esta query. A
+divergência foi **aceita pelo candidato** em 13/11/2026 e está registrada no plano (§14, E8), sem alterar a spec.
+
+### Query corrigida
+
+```sql
+-- Ranking de clientes por valor comprado em 2026 (ano civil em America/Sao_Paulo).
+-- DataPedido é armazenado em UTC. São Paulo = UTC-3 (sem horário de verão desde 2019):
+--   01/01/2026 00:00 local = 2026-01-01 03:00 UTC (início, inclusivo)
+--   01/01/2027 00:00 local = 2027-01-01 03:00 UTC (fim, exclusivo)
+SELECT
+    ROW_NUMBER() OVER (ORDER BY SUM(i.Quantidade * i.PrecoUnitario) DESC, c.Id) AS Posicao,
+    c.Id   AS ClienteId,
+    c.Nome,
+    SUM(i.Quantidade * i.PrecoUnitario) AS Total
+FROM Pedidos p
+INNER JOIN Clientes c    ON c.Id = p.ClienteId
+INNER JOIN ItensPedido i ON i.PedidoId = p.Id
+WHERE p.DataPedido >= '2026-01-01T03:00:00'
+  AND p.DataPedido <  '2027-01-01T03:00:00'
+GROUP BY c.Id, c.Nome
+ORDER BY Total DESC, c.Id;
+```
+
+D1: `DESC`. D2: `GROUP BY c.Id, c.Nome` e `ClienteId` no resultado. D3: `INNER JOIN` explícito. D4: limites UTC do
+ano civil local, em intervalo semiaberto. D5: desempate por `c.Id` e `Posicao` por `ROW_NUMBER()`. D6: predicado
+sobre a coluna sem função. Ranking completo (sem `TOP`), batch único sem `GO`; o total é `DECIMAL(38,2)`, com as 2
+casas preservadas. O endpoint `GET /relatorios/top-clientes` usa a mesma lógica com `TOP (5)` e parâmetros (§9.4).
+
+### Correção funcional (DR-RANK)
+
+`RankingSqlTestes` executa os dois arquivos **sem alteração**, via SqlClient, sobre o DR-RANK da spec §9.5 em banco
+de teste limpo (Testcontainers; a fixture da E6 não mudou).
+
+| Posição | Cliente | Total (V2, IT-23) |
+|---|---|---|
+| 1 | Bruno Lima | 500,00 (o pedido de 01/01/2027 00:00 local, de 999,00, fica fora) |
+| 2 | Elisa Rocha | 450,00 (31/12/2026 23:59:59 local, dentro) |
+| 3 | Carla Dias | 400,00 |
+| 4 | Diego Alves | 400,00 (01/01/2026 00:00:00 local, dentro; empate com Carla, que tem `Id` menor) |
+| 5 | Ana Souza (ana1) | 300,00 (2 itens: 2 × 100,00 + 1 × 100,00) |
+| 6 | Ana Souza (ana2) | 250,00 |
+
+Fábio (31/12/2025 local) e o cliente sem pedidos ficam fora. Trocar o preço atual de todos os produtos para 9.999,99
+não muda nada: o total usa o preço gravado no item. A V0 sobre o mesmo DR-RANK (IT-24) devolve 5 linhas só com
+`Nome` e `Total`, nesta ordem de totais: 400,00, 400,00, 500,00, 550,00 ("Ana Souza") e 1.000,00 (Fábio).
+
+### Ambiente isolado e massa
+
+A massa **nunca** foi carregada no banco de desenvolvimento. Ela roda num projeto Compose separado, `joya-perf`
+([docker-compose.perf.yml](docker-compose.perf.yml)): containers, rede e volume (`joya-perf_dados-sql`) próprios,
+mesma imagem e mesmos scripts, sem porta no host, teto de 2.048 MB de memória e hostname fixo `joya-perf-sqlserver`:
+
+```bash
+docker compose -p joya-perf -f docker-compose.yml -f docker-compose.perf.yml up -d sqlserver db-init
+```
+
+```bash
+docker compose -p joya-perf -f docker-compose.yml -f docker-compose.perf.yml run --rm --no-deps -T db-init /opt/mssql-tools18/bin/sqlcmd -C -b -f 65001 -S sqlserver -U sa -i /database/performance/gerar-massa.sql
+```
+
+```bash
+docker compose -p joya-perf -f docker-compose.yml -f docker-compose.perf.yml run --rm --no-deps -T db-init /opt/mssql-tools18/bin/sqlcmd -C -b -f 65001 -y 0 -S sqlserver -U sa -d JoyaPedidos -i /database/performance/medir-ranking.sql
+```
+
+```bash
+docker compose -p joya-perf -f docker-compose.yml -f docker-compose.perf.yml down -v
+```
+
+No Git Bash, prefixe `MSYS_NO_PATHCONV=1` nos comandos `run`. A saída da medição é grande (resultados e XML dos
+planos): redirecione-a para um arquivo fora do repositório. O `down -v` apaga só o volume `joya-perf_dados-sql`.
+
+**Travas.** Os dois scripts conferem, dentro do SQL Server, se `SERVERPROPERTY('MachineName')` é
+`joya-perf-sqlserver`, hostname que só o `docker-compose.perf.yml` define. Em qualquer outra instância, inclusive a de
+desenvolvimento, eles param com erro antes de tocar em dados. `gerar-massa.sql` é idempotente (§4.6): se a massa já
+existe, não faz nada e sai com código 0. `medir-ranking.sql` remove e recria `IX_Pedidos_DataPedido` só nesse banco,
+e pode ser executado de novo mesmo depois de abortar no meio: ele recria o índice se o encontrar ausente.
+
+**Massa**: determinística e set-based, sobre uma tabela de números; sem `WHILE`, `NEWID()` ou `RAND()`. Leva 20 s e
+se soma ao seed. Gerada duas vezes, em instâncias distintas, deu dados idênticos: mesmos `CHECKSUM_AGG` nas 4 tabelas
+e mesma soma de `Quantidade × PrecoUnitario`.
+
+| Item | Valor |
+|---|---|
+| Clientes | 1.210 (600 nomes da massa usados por 2 clientes cada; 50 sem pedidos) |
+| Produtos | 262 |
+| Pedidos | 120.033, de `2024-01-01T03:00:00Z` a `2027-01-01T02:54:51Z`; por ano local: 40.073 (2024), 39.978 (2025), 39.982 (2026) |
+| Itens | 360.052 (3,0 por pedido; 1 a 5) |
+| Páginas (índices reconstruídos após a carga) | `PK_Pedidos` 344, `IX_Pedidos_DataPedido` 300, `IX_Pedidos_ClienteId_DataPedido` 300, `PK_ItensPedido` 1.547, `UX_ItensPedido_PedidoId_ProdutoId` 1.410, `PK_Clientes` 17; ~31 MB no total |
+| Estatísticas | `UPDATE STATISTICS ... WITH FULLSCAN` nas 4 tabelas |
+| Ambiente | SQL Server 2022 CU28 Developer (compatibilidade 160), 12 CPUs visíveis, 2.048 MB, MAXDOP 0, limiar de paralelismo 5; Docker Desktop (WSL 2) num notebook i7-1255U |
+
+### Protocolo de medição
+
+[medir-ranking.sql](database/performance/medir-ranking.sql) inclui cada variante pelo próprio arquivo (`:r`), sem
+alteração, e aplica a cada uma o [medir-variante.sql](database/performance/medir-variante.sql):
+- 1 execução de aquecimento, descartada;
+- 3 rodadas medidas com `SET STATISTICS IO, TIME ON`;
+- 1 execução separada com `SET STATISTICS XML ON`, para o plano real (fora da medição de tempo).
+
+O cache de dados fica aquecido: nenhum `DBCC DROPCLEANBUFFERS`/`FREEPROCCACHE`. O tempo de cada rodada é o bloco
+`SQL Server Execution Times` da instrução; em `sp_executesql`, é o bloco externo.
+
+**Condições controladas**, aplicadas só no banco isolado:
+- Query Store desligado.
+- Desligados os feedbacks que ajustam concessão de memória e cardinalidade entre execuções
+  (`ROW_MODE_`/`BATCH_MODE_MEMORY_GRANT_FEEDBACK`, `MEMORY_GRANT_FEEDBACK_PERCENTILE_GRANT`,
+  `MEMORY_GRANT_FEEDBACK_PERSISTENCE` e `CE_FEEDBACK`).
+
+Assim, cada passada é independente e cada plano reflete só a escolha do otimizador. Esse controle entrou depois da
+revisão independente. A primeira rodada usava as configurações padrão do SQL Server 2022, e nela todos os planos
+vinham com a memória ajustada pelo feedback (`IsMemoryGrantFeedbackAdjusted="Yes"`): as passadas herdavam o ajuste
+umas das outras. Dois planos dessa rodada estão em `planos/rodada-inicial-com-feedback`.
+
+O roteiro inteiro rodou **5 vezes** (passadas A a E). Cada passada dá a mediana das suas 3 rodadas, e as tabelas
+mostram a mediana das 5 medianas e a faixa entre elas. As leituras lógicas foram idênticas nas 5 passadas. O resumo é
+calculado por [resumir-medicao.ps1](database/performance/resumir-medicao.ps1) a partir dos logs versionados em
+[docs/evidencias/parte4](docs/evidencias/parte4), junto com o `consolidado.txt` e os planos reais (`.sqlplan`).
+
+### Medições (massa de 120.033 pedidos, cache de dados aquecido)
+
+| Variante | Leituras lógicas `Pedidos` / `ItensPedido` / `Clientes` (total) | CPU ms, mediana (faixa) | Decorrido ms, mediana (faixa) | Plano | Linhas devolvidas |
+|---|---|---|---|---|---|
+| **V0** original | 895 / 1.475 / 46 (2.416) | 963 (806–1.346) | 198 (165–284) | paralelo (DOP 12), row mode | 604 (por nome) |
+| V1 = V0 só com o predicado em intervalo | 102 / 1.475 / 46 (1.623) | 613 (547–909) | 103 (97–163) | paralelo (DOP 12), row mode | 604 |
+| V0 com `OPTION (MAXDOP 1)` (diagnóstico) | 300 / 1.398 / 17 (1.715) | 247 (223–339) | 248 (232–346) | serial, row mode | 604 |
+| V1 com `OPTION (MAXDOP 1)` (diagnóstico) | 102 / 1.398 / 17 (1.517) | 157 (148–194) | 157 (152–198) | serial, row mode | 604 |
+| **V2** corrigida | 102 / 1.398 / 17 (1.517) | 54 (50–89) | 60 (56–91) | serial, batch mode (exceto o seek) | 1.160 (por cliente) |
+| **V2 sem `IX_Pedidos_DataPedido`** | 344 / 1.398 / 17 (1.759) | 86 (83–88) | 90 (89–92) | serial; `Merge Join` e varredura de `Pedidos` em row mode | 1.160 |
+| V0 sem `IX_Pedidos_DataPedido` | 895 / 1.475 / 46 (2.416) | 912 (825–978) | 188 (154–204) | igual à V0 | 604 |
+
+**V0 e V2 não devolvem o mesmo resultado**: a V0 está funcionalmente errada (agrupa por nome, usa o ano UTC, ordena
+ao contrário). A comparação é de **custo**, não de equivalência. As variantes com `MAXDOP 1` não são a query
+literal: servem só para separar o efeito do paralelismo.
+
+### Variante parametrizada (forma da aplicação)
+
+Mesma V2, mudando só a forma dos limites. "Estimado / real" é o `Index Seek` em `IX_Pedidos_DataPedido`.
+
+| Variante | Busca em `IX_Pedidos_DataPedido` | Estimado / real (pedidos) | Junção com itens, estimado / real | CPU ms (faixa) | Decorrido ms (faixa) |
+|---|---|---|---|---|---|
+| V2 com literais (`'2026-01-01T03:00:00'`) | dinâmica (`GetRangeWithMismatchedTypes`, `Merge Interval`) | 39.975,1 / 39.982 | 119.910 / 119.924 | 54 (50–89) | 60 (56–91) |
+| `sp_executesql`, `DATETIME2(0)` (tipo da coluna) | direta | 39.975,1 / 39.982 | 119.910 / 119.924 | 61 (55–88) | 63 (61–94) |
+| `sp_executesql`, `DATETIME2(7)` (como o SqlClient envia) | dinâmica (`GetRangeWithMismatchedTypes`) | 39.975,1 / 39.982 | 119.910 / 119.924 | 60 (57–61) | 64 (60–69) |
+| variáveis locais (`DECLARE`) | direta | **19.723,4** / 39.982 | **59.162,6** / 119.924 | 54 (49–57) | 61 (54–64) |
+| SQL da API (`TOP (5)`, `DATETIME2(7)`) | dinâmica | 39.975,1 / 39.982 | 119.910 / 119.924 (`Adaptive Join`) | 56 (50–63) | 60 (54–65) |
+| `DATETIME2(7)` sem `IX_Pedidos_DataPedido` | (sem índice: `Clustered Index Scan`) | 39.975,2 / 39.982 | 119.910 / 119.924 | 99 (91–104) | 101 (92–110) |
+
+- Literais e parâmetros (com *parameter sniffing*) estimam o intervalo quase exatamente.
+- Com variáveis locais, o otimizador não conhece os valores e usa uma seletividade fixa para as duas desigualdades:
+  0,3 × √0,3 ≈ 16,4%, ou 19.723 de 120.033 linhas. Ser metade do real é coincidência desta massa. O formato do
+  plano é o mesmo da forma com `DATETIME2(0)` (mesmos operadores e índices), e a concessão de memória é menor
+  (77.512 contra 88.192 KB). O tempo fica dentro do ruído.
+- `DATETIME2(7)` contra a coluna `DATETIME2(0)` gera a busca dinâmica (`GetRangeWithMismatchedTypes`, com
+  `Nested Loops`/`Merge Interval` sobre `Constant Scan`, em row mode). O literal em texto também gera. Continua um
+  `Index Seek` *SARGable*, com a mesma estimativa.
+- `DATETIME2(0)` faz a busca direta, com o plano todo em batch mode. As faixas de tempo das duas se sobrepõem:
+  **nenhuma diferença mensurável**, então a API não mudou.
+- O SQL da API agrega por `p.ClienteId`, ordena o top 5 e só então busca os 5 clientes (`Clientes`: 10 leituras
+  contra 17). Usa um `Adaptive Join` que, nesta massa, executou como hash join. O custo fica na faixa da V2.
+- As variantes V2 ficam entre 54 e 61 ms de CPU, com faixas sobrepostas; nenhuma é declarada mais rápida.
+
+### Planos de execução (operadores principais)
+
+- **V0** (paralelo, DOP 12, row mode; memória concedida 56.640 KB, usada no máximo 17.280 KB):
+  - `Index Scan` em `IX_Pedidos_ClienteId_DataPedido` lendo os **120.033** pedidos. É o índice coberto mais estreito;
+    `IX_Pedidos_DataPedido` não serve para `YEAR()`.
+  - `Hash Match (Left Outer Join)` com `Clientes`: 120.083 linhas, porque os 50 clientes sem pedido ainda estão lá.
+  - `Compute Scalar` de `YEAR` → `Filter [Expr1005] = 2026` (est. 40.011 / real 39.983) → `Bitmap`.
+  - `Hash Match (Left Outer Join)` com `Index Scan` em `UX_ItensPedido_PedidoId_ProdutoId`.
+  - Agregação parcial → `Sort` + `Stream Aggregate` por `Nome` (est. 335,6 / real 604 grupos) → `Sort` pelo total.
+- **V0 serial**: `Merge Join (Left Outer Join)` entre `Clientes` e `IX_Pedidos_ClienteId_DataPedido` (300 páginas,
+  contra 895 leituras no paralelo) → `Filter` → `Hash Match (Left Outer Join)` com os itens → `Hash Match (Aggregate)`
+  por nome. Continua `Left Outer Join` + `Filter`, também sem paralelismo.
+- **V1**: muda só o acesso a `Pedidos`, que vira `Index Seek` em `IX_Pedidos_DataPedido` (39.983 linhas lidas), e a
+  primeira junção passa a `Inner Join`. O resto segue a V0 (row mode, agrupamento por nome).
+- **V2** (serial; junções, agregação, `Sort` e `Window Aggregate` em batch mode; o seek e a busca dinâmica em row
+  mode):
+  - `Index Seek` em `IX_Pedidos_DataPedido` (39.982).
+  - `Hash Match (Inner Join)` com `Index Scan` em `UX_ItensPedido_PedidoId_ProdutoId`: lê as 360.052 linhas, e o
+    filtro *bitmap* reduz a saída a 119.924.
+  - `Hash Match (Aggregate)` por cliente (1.160) → `Hash Match (Inner Join)` com `Clustered Index Scan` em
+    `PK_Clientes` → `Sort` → `Window Aggregate` (`ROW_NUMBER`).
+  - Em `Pedidos`, nas junções e na agregação, a estimativa fica a menos de 0,1% do real. A exceção é a varredura de
+    `ItensPedido`: estima 360.052 linhas e entrega 119.924, porque o *bitmap* é aplicado durante a leitura.
+- **V2 sem `IX_Pedidos_DataPedido`**: `Clustered Index Scan` em `PK_Pedidos` (120.033 lidas, 39.982 passam pelo
+  predicado) → `Merge Join` com `Index Scan` em `UX_ItensPedido_PedidoId_ProdutoId` (360.052; os dois lados já vêm
+  em ordem de `PedidoId`). O agregado e a ordenação são os mesmos.
+- **Concessão de memória excessiva na V2** (`MemoryGrantWarning`, `Excessive Grant`): todas as formas da V2 e o SQL
+  da API pedem de 71 a 88 MB e usam no máximo 1,6 a 3,1 MB. A V0 serial pede 15,6 MB e usa 3,7 MB, sem aviso. A
+  causa exata não foi isolada. Com as configurações padrão do SQL Server 2022 (feedback ligado), o próprio servidor
+  corrige essa concessão: na rodada inicial, a V2 recebia 6.304 KB (`IsMemoryGrantFeedbackAdjusted="Yes: Stable"`).
+  Com várias execuções simultâneas antes desse ajuste, a reserva excessiva pode gerar espera por memória
+  (`RESOURCE_SEMAPHORE`). Concorrência não foi medida; nada foi alterado na API.
+- Nenhum plano teve `Key Lookup` nem *spill*. A única conversão implícita é a de `Quantidade` (`int`) para `decimal`
+  na multiplicação, inevitável e sem efeito no acesso.
+
+### O que os números mostram
+
+O critério para tempo: uma diferença só é afirmada quando as faixas entre passadas não se sobrepõem, ou quando a
+ordem se repete em todas as passadas. Leituras são determinísticas.
+
+1. **D6 confirmada sem paralelismo.** Comparando V0 e V1 com `MAXDOP 1`:
+   - Com `YEAR()`, `Pedidos` é lida inteira (`Index Scan` + `Filter`, 300 páginas). Trocando **só** o predicado,
+     vira `Index Seek` com 102 leituras (−66% em `Pedidos`, −12% no total).
+   - A CPU cai de 247 para 157 ms (−36%), com faixas que não se sobrepõem (223–339 contra 148–194).
+   - Nas versões paralelas, as 895 leituras de `Pedidos` incluem o custo do próprio paralelismo: elas não medem a D6.
+2. **V0 → V2, como o servidor executa cada uma**: leituras −37% (2.416 → 1.517), CPU 963 → 54 ms, decorrido
+   198 → 60 ms, sem sobreposição. Grande parte da diferença de CPU é **paralelismo**: a V0 roda com DOP 12 e gasta
+   ~4× mais CPU que ela mesma em série (963 contra 247 ms), terminando só um pouco antes (198 contra 248 ms).
+3. **V0 → V2, ambas em série**: leituras −12% (1.715 → 1.517), CPU 247 → 54 ms (~4,6×), decorrido 248 → 60 ms (~4×).
+   A V1 serial já tem as mesmas leituras da V2 (1.517) e ainda gasta 157 ms. O restante vem das diferenças de plano
+   (**hipóteses**, não isoladas uma a uma): row mode contra batch mode, agrupamento por `NVARCHAR` (`Nome`) contra
+   `Id` inteiro, e a junção externa com `ItensPedido`.
+4. **`ItensPedido` domina o custo da V2**: 1.398 de 1.517 leituras (92%). O otimizador preferiu varrer o índice com
+   filtro *bitmap* a buscar os itens pedido a pedido (seriam ~40 mil buscas; essa alternativa não foi medida).
+5. **`IX_Pedidos_DataPedido`** reduz as leituras de `Pedidos` de 344 para 102 (−70%; −14% no total da V2). No tempo:
+   - mediana de CPU 86 → 54 ms e decorrido 90 → 60 ms (cerca de −1/3);
+   - o decorrido foi menor com o índice em todas as 5 passadas, e a CPU em 4 de 5;
+   - na passada B, mais lenta para todas as V2, a faixa da V2 (50–89) encosta na da V2 sem índice (83–88).
+
+   Ganho modesto e provável, coerente com as leituras. Com parâmetros `DATETIME2(7)`, o mesmo: CPU 99 → 60 ms.
+6. Com 2026 = 1/3 dos pedidos, o otimizador ainda prefere o `Index Seek`. Com uma fração maior do período, a
+   varredura pode ser legitimamente melhor (RSK-08): seek não é superior a scan por princípio.
+
+### Decisão sobre índices: nenhuma mudança no esquema
+
+| Índice | Evidência | Decisão |
+|---|---|---|
+| `IX_Pedidos_DataPedido (DataPedido) INCLUDE (ClienteId)` | Seek em V1, V2, nas formas parametrizadas e no SQL da API. Coberto, sem `Key Lookup`. −70% de leituras em `Pedidos` e tempo da V2 cerca de 1/3 menor (item 5). Custo: 300 páginas (2,3 MB por 120 mil pedidos) e 1 inserção a mais por pedido criado (`POST /pedidos` grava 1 linha em `Pedidos`). Pela spec (§8.5), também serve ao filtro de período de `GET /pedidos`, não medido aqui. | **Mantido.** |
+| `IX_Pedidos_ClienteId_DataPedido (ClienteId, DataPedido)` | Não aparece em nenhum plano da V2 na massa. A V0 o varre por ser o índice coberto mais estreito. No seed pequeno, o plano da V2 (via MCP) faz seek nele por cliente. Existe para o filtro por cliente de `GET /pedidos` (§8.5), fora desta medição. | **Mantido** (não medido para a listagem). |
+| `UX_ItensPedido_PedidoId_ProdutoId (PedidoId, ProdutoId) INCLUDE (Quantidade, PrecoUnitario)` | Garante a RN-04. O `INCLUDE` cobre a soma: em todas as variantes ele é lido no lugar do índice clusterizado (1.410 contra 1.547 páginas), sem `Key Lookup`. | **Mantido.** |
+
+Nenhum índice foi criado ou alterado no esquema versionado, e o `IT-21` continua valendo sem mudança. A remoção de
+`IX_Pedidos_DataPedido` foi feita só no banco isolado, e o índice foi recriado com a mesma definição. Reduzir a
+varredura de `ItensPedido` exigiria outro desenho (por exemplo, columnstore ou agregados pré-calculados), sem medição
+nem necessidade neste escopo.
+
+### Limitações
+
+- **Ambiente**: um único notebook (i7-1255U, núcleos híbridos, Docker Desktop/WSL 2), com outros processos. Tempos
+  de 50 a 350 ms variam entre passadas (a V0 paralela, de 806 a 1.346 ms de CPU). As conclusões de tempo seguem o
+  critério acima.
+- **Cache**: só cache de dados aquecido. Os dados (~31 MB) cabem inteiros na memória. Não houve medição com cache
+  frio.
+- **Condições controladas**: Query Store e feedbacks desligados para medir. Com as configurações padrão, a
+  concessão de memória da V2 é corrigida automaticamente (ver acima) e os planos podem mudar entre execuções.
+- **Massa**: sintética e uniforme (2026 = 1/3 dos pedidos). Outras distribuições e volumes podem mudar as escolhas
+  do otimizador.
+- **Batch mode sobre rowstore**: depende do nível de compatibilidade (150+) e da edição (Developer aqui). Em outro
+  ambiente, o plano da V2 pode ser diferente.
+- **Planos reais**: capturados numa execução separada, porque `STATISTICS XML` tem custo próprio.
+- **MCP**: aponta para o banco de desenvolvimento (seed de 33 pedidos). As medições da massa foram feitas por
+  `sqlcmd` no banco isolado, e os números do seed nunca foram misturados aos da massa.
+
+### Como o MCP foi usado na investigação
+
+- **Na E7**, pelo MCP: o DBHub repassa as mensagens de `STATISTICS IO`; o plano em cache é legível sem `SHOWPLAN`;
+  `dm_exec_sql_text.dbid` vem nulo em consultas ad hoc (filtrar por `dm_exec_plan_attributes`); variáveis locais
+  distorcem a estimativa. Esses achados definiram o protocolo: a forma parametrizada e a de variáveis locais
+  entraram como variantes medidas.
+- **Na E8**, com `execute_sql` no banco de desenvolvimento:
+  - V0 e V2 executadas com `SET STATISTICS IO ON`, com as leituras devolvidas em `messages`. Os defeitos aparecem
+    também no seed: "Ana Souza" com 1.952,35 na V0, e Elisa com 509,67 na V0 contra 159,77 na V2.
+  - Operadores do plano em cache lidos por XQuery sobre `sys.dm_exec_query_plan`, cruzando
+    `sys.dm_exec_query_stats` e `sys.dm_exec_plan_attributes` (`dbid`).
+  - Estatísticas por `sys.stats` com `sys.dm_db_stats_properties`, e índices por `sys.indexes`.
+- **Achados do MCP**:
+  - No seed, a V2 usa outro plano (`Nested Loops` com seek em `IX_Pedidos_ClienteId_DataPedido` por cliente). Os
+    planos do banco pequeno não representam o volume, o que justificou a massa.
+  - A V0 também mantém `Left Outer Join` + `Filter` no seed, o mesmo que se viu na massa.
 
 ## Limitações conhecidas
 
