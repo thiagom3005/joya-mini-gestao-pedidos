@@ -1,8 +1,8 @@
 # Mini Gestão de Pedidos — Docker Compose (spec §11).
-# Serviços: SQL Server, aplicação automática dos scripts de database/ (db-init) e a API .NET (plano E9).
-# O frontend (web) entra na entrega E10.
+# Serviços: SQL Server, aplicação automática dos scripts de database/ (db-init), a API .NET (plano E9) e o frontend
+# React servido pelo nginx, com proxy /api → api:8080 (plano E10).
 #
-# Uso:   docker compose up --build -d          (API em http://localhost:5080; GET /health)
+# Uso:   docker compose up --build -d          (frontend em http://localhost:3000; API em http://localhost:5080)
 # Reset: docker compose down -v   (apaga só o volume deste projeto: joya-pedidos_dados-sql)
 #
 # SENHA PADRÃO: "Joya_Dev_2026_Inseguro" é PÚBLICA, INSEGURA e EXCLUSIVA DE DESENVOLVIMENTO LOCAL (spec §11.4).
@@ -90,6 +90,21 @@ services:
     # A API falha rápido na inicialização (fuso ou string de conexão ausentes). Até 3 novas tentativas; depois o
     # container fica parado, com o erro em `docker compose logs api`, em vez de reiniciar para sempre.
     # Sem healthcheck HTTP: a imagem ASP.NET não traz curl (spec §11.2).
+    restart: on-failure:3
+
+  web:
+    # Build multi-stage de frontend/Dockerfile: Node (npm ci + vite build) → nginx com os estáticos e o proxy
+    # /api/* → http://api:8080/* (frontend/nginx.conf). Mesma origem para o navegador: sem CORS na API.
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    # Só precisa que a API tenha iniciado (spec §11.2). Nos primeiros segundos o proxy pode responder 502; a tela
+    # mostra o erro com "Tentar novamente".
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "${WEB_PORTA:-3000}:80"
     restart: on-failure:3
 
 volumes:

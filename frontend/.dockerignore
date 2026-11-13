@@ -1,0 +1,15 @@
+# Contexto de build do frontend (frontend/): o build roda dentro da imagem (npm ci + vite build).
+node_modules/
+dist/
+*.tsbuildinfo
+.vite/
+coverage/
+playwright-report/
+test-results/
+npm-debug.log*
+**/.env
+**/.env.*
+.vscode/
+.idea/
+Dockerfile
+.dockerignore
