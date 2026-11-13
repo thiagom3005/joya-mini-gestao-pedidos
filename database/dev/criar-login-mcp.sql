@@ -19,7 +19,9 @@
 SET NOCOUNT ON;
 
 -- COLLATE binária: com a collation padrão (CI_AS), [A-Za-z] aceitaria letras acentuadas.
-IF LEN(N'$(JOYA_MCP_SENHA)') < 8 OR N'$(JOYA_MCP_SENHA)' COLLATE Latin1_General_BIN2 LIKE N'%[^A-Za-z0-9_-]%'
+IF LEN(N'$(JOYA_MCP_SENHA)') < 8
+   OR N'$(JOYA_MCP_SENHA)' COLLATE Latin1_General_BIN2
+      LIKE N'%[^A-Za-z0-9\_\-]%' ESCAPE N'\'
     THROW 50001, N'JOYA_MCP_SENHA ausente ou inválida: use 8+ caracteres, apenas letras, dígitos, "_" ou "-".', 1;
 GO
 
