@@ -332,6 +332,11 @@ o pacote. Transporte só stdio (processo confirmado com `--transport stdio`, sem
 1.6.1 removeu a opção `--readonly` e só aceita `readonly = true` num arquivo de configuração TOML, que também
 precisaria dos dados de conexão. A garantia continua sendo o banco, como o plano prevê.
 
+**Reconexão após a E11 (13/11/2026).** Na E11 a integração ficou `failed` por timeout de partida (ver acima). Depois
+da publicação, o servidor `sqlserver-joya` voltou a conectar no Claude Code, sem mudança no `.mcp.json`, nas
+credenciais ou no banco, e uma consulta real pela ferramenta `execute_sql` devolveu `SYSTEM_USER` = `joya_mcp`,
+`DB_NAME()` = `JoyaPedidos` e 35 linhas em `dbo.Pedidos`.
+
 **O que o MCP mudou no trabalho** (insumos para a E8):
 
 - O DBHub 1.6.1 devolve **vários result sets e as mensagens informativas**: `SET STATISTICS IO ON` via `execute_sql`
