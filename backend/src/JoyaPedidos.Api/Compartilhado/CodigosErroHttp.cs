@@ -7,8 +7,17 @@ namespace JoyaPedidos.Api.Compartilhado;
 /// </summary>
 public static class CodigosErroHttp
 {
+    // Gerados pelo framework (código genérico por status).
     public const string RecursoNaoEncontrado = "RECURSO_NAO_ENCONTRADO";
     public const string RequisicaoInvalida = "REQUISICAO_INVALIDA";
+
+    // Emitidos pela aplicação (spec §5.2), via MapeadorErros.
+    public const string Validacao = "VALIDACAO";
+    public const string ClienteNaoEncontrado = "CLIENTE_NAO_ENCONTRADO";
+    public const string ProdutoNaoEncontrado = "PRODUTO_NAO_ENCONTRADO";
+    public const string EstoqueInsuficiente = "ESTOQUE_INSUFICIENTE";
+    public const string PedidoNaoEncontrado = "PEDIDO_NAO_ENCONTRADO";
+    public const string ConflitoConcorrencia = "CONFLITO_CONCORRENCIA";
     public const string ErroInterno = "ERRO_INTERNO";
 
     /// <summary>Código genérico para um status sem código definido pela aplicação.</summary>
