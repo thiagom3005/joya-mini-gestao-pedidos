@@ -8,12 +8,13 @@ public sealed class DadosDeTeste(string stringDeConexao)
 {
     private static CancellationToken Cancelamento => TestContext.Current.CancellationToken;
 
-    public Task<int> InserirClienteAsync(string nome) => ConsultaSql.EscalarAsync<int>(
+    /// <param name="email">Único no banco; sem ele, um e-mail aleatório é gerado.</param>
+    public Task<int> InserirClienteAsync(string nome, string? email = null) => ConsultaSql.EscalarAsync<int>(
         stringDeConexao,
         "INSERT INTO dbo.Clientes (Nome, Email) OUTPUT INSERTED.Id VALUES (@Nome, @Email);",
         Cancelamento,
         ("@Nome", nome),
-        ("@Email", $"{Guid.NewGuid():N}@teste.exemplo"));
+        ("@Email", email ?? $"{Guid.NewGuid():N}@teste.exemplo"));
 
     public Task<int> InserirProdutoAsync(string nome, decimal preco, int estoque) => ConsultaSql.EscalarAsync<int>(
         stringDeConexao,
