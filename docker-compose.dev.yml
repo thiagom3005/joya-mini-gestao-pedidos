@@ -1,0 +1,10 @@
+# Opt-in de desenvolvimento (spec §11.6): publica o SQL Server SOMENTE no loopback do host, para o MCP do Claude Code,
+# ferramentas de banco ou a API rodando fora do Docker. Não se chama docker-compose.override.yml de propósito:
+# esse nome seria carregado automaticamente e exporia a porta por padrão.
+#
+# Uso: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d sqlserver db-init
+
+services:
+  sqlserver:
+    ports:
+      - "127.0.0.1:${SQL_PORTA:-1433}:1433"

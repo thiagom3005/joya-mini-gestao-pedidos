@@ -1,0 +1,67 @@
+# Mini Gestão de Pedidos — Docker Compose (spec §11).
+# Nesta etapa (plano E3): apenas o SQL Server e a aplicação automática dos scripts de database/.
+# A API (E9) e o frontend (E10) entram nas próximas entregas.
+#
+# Uso:   docker compose up -d sqlserver db-init
+# Reset: docker compose down -v   (apaga só o volume deste projeto: joya-pedidos_dados-sql)
+#
+# SENHA PADRÃO: "Joya_Dev_2026_Inseguro" é PÚBLICA, INSEGURA e EXCLUSIVA DE DESENVOLVIMENTO LOCAL (spec §11.4).
+# Ela existe para que o compose suba sem nenhum passo manual. Para trocá-la, defina MSSQL_SA_PASSWORD num arquivo
+# .env (veja .env.example). Nunca reutilize esse valor em outro ambiente.
+
+name: joya-pedidos
+
+x-imagem-sqlserver: &imagem-sqlserver mcr.microsoft.com/mssql/server:2022-CU28-ubuntu-22.04
+
+x-senha-sa: &senha-sa ${MSSQL_SA_PASSWORD:-Joya_Dev_2026_Inseguro}
+
+services:
+  sqlserver:
+    image: *imagem-sqlserver
+    # O script de entrada da imagem (launch_sqlservr.sh) roda o sqlservr em segundo plano e não repassa o SIGTERM:
+    # todo `docker stop` virava SIGKILL, com recuperação do banco no start seguinte. Com o sqlservr como processo
+    # principal, a parada é limpa (testado: ~2 s, código 0). Os scripts de setup customizado da imagem (MSSQL_DB,
+    # /mssql-server-setup-scripts.d) não são usados neste projeto.
+    entrypoint: ["/opt/mssql/bin/sqlservr"]
+    stop_grace_period: 30s
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: *senha-sa
+      # Usada só pelo sqlcmd do healthcheck, para a senha não aparecer na linha de comando.
+      SQLCMDPASSWORD: *senha-sa
+    volumes:
+      - dados-sql:/var/opt/mssql
+    # Sem "ports": o banco não fica exposto no host. Exposição opt-in em docker-compose.dev.yml (spec §11.6).
+    healthcheck:
+      # Autentica e executa um comando: prova que o servidor aceita login, não só que a porta abriu (spec §11.2).
+      # Se o banco do projeto já existe (volume reaproveitado), também o abre: logo após reiniciar, o servidor aceita
+      # login antes de terminar de recuperar os bancos de usuário, e o db-init falhava com o erro 904.
+      # "-r 1" mantém as mensagens de erro (ex.: login falhou) visíveis em `docker inspect`; só a saída normal é descartada.
+      test:
+        - "CMD-SHELL"
+        - >-
+          /opt/mssql-tools18/bin/sqlcmd -C -b -r 1 -S localhost -U sa
+          -Q "IF DB_ID(N'JoyaPedidos') IS NOT NULL EXEC (N'SELECT TOP (0) 1 FROM JoyaPedidos.sys.objects')" > /dev/null
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
+
+  db-init:
+    image: *imagem-sqlserver
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      SQLCMDPASSWORD: *senha-sa
+    volumes:
+      - ./database:/database:ro
+    # Sem o script de entrada da imagem: o comando roda direto, com stdin. Scripts manuais usam
+    # `docker compose run --rm --no-deps db-init <comando>` (--no-deps não recria o sqlserver).
+    entrypoint: []
+    command: ["/bin/bash", "/database/aplicar-scripts.sh", "sqlserver"]
+    restart: "no"
+
+volumes:
+  dados-sql:

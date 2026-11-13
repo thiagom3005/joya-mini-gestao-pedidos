@@ -9,8 +9,11 @@ paths:
 Referências: spec §4 (modelo), §9 (ranking), §11 (Docker).
 
 ## Scripts
-- `database/*.sql` (raiz) rodam automaticamente no `db-init`, em ordem lexical, com `sqlcmd -C -b`. Subpastas
+- `database/*.sql` (raiz) rodam automaticamente pelo `database/aplicar-scripts.sh` (no `db-init` e nos testes), em
+  ordem lexical, com `sqlcmd -C -b -f 65001` e senha via `SQLCMDPASSWORD` (nunca `-P`). Subpastas
   (`consultas/`, `performance/`, `dev/`) **nunca** rodam automaticamente.
+- Scripts manuais: `docker compose run --rm --no-deps db-init /opt/mssql-tools18/bin/sqlcmd ...` (no Git Bash,
+  prefixe `MSYS_NO_PATHCONV=1`). Sem `--no-deps`, o compose pode recriar o `sqlserver`.
 - Todo script automático é **idempotente**: cria objeto só se não existir; seed só se `Clientes` estiver vazia.
   Executar duas vezes não pode falhar nem duplicar dados (IT-21).
 - Scripts podem usar `GO` (execução via `sqlcmd`, também nos testes). Exceção: `consultas/ranking-2026-corrigida.sql`
