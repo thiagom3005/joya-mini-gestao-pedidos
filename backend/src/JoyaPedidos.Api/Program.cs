@@ -1,6 +1,7 @@
 using JoyaPedidos.Api.Compartilhado;
 using JoyaPedidos.Api.Modulos.Catalogo;
 using JoyaPedidos.Api.Modulos.Pedidos;
+using JoyaPedidos.Api.Modulos.Relatorios;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,7 @@ builder.Services.AddProblemDetailsPadronizados();
 builder.Services.AddHealthChecks();
 builder.Services.AddModuloPedidos();
 builder.Services.AddModuloCatalogo();
+builder.Services.AddModuloRelatorios();
 
 var app = builder.Build();
 
@@ -25,5 +27,6 @@ app.UseStatusCodePages();
 app.MapHealthChecks("/health").WithMetadata(new HttpMethodMetadata([HttpMethods.Get, HttpMethods.Head]));
 app.MapPedidosEndpoints();
 app.MapCatalogoEndpoints();
+app.MapRelatoriosEndpoints();
 
 app.Run();
