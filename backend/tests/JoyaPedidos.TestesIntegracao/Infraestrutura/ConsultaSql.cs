@@ -5,11 +5,16 @@ namespace JoyaPedidos.TestesIntegracao.Infraestrutura;
 /// <summary>Consultas de apoio para arranjos e verificações diretas no banco de teste.</summary>
 public static class ConsultaSql
 {
-    public static async Task<T> EscalarAsync<T>(string stringDeConexao, string sql, CancellationToken cancelamento)
+    public static async Task<T> EscalarAsync<T>(
+        string stringDeConexao, string sql, CancellationToken cancelamento, params (string Nome, object Valor)[] parametros)
     {
         await using var conexao = new SqlConnection(stringDeConexao);
         await conexao.OpenAsync(cancelamento);
         await using var comando = new SqlCommand(sql, conexao);
+        foreach (var parametro in parametros)
+        {
+            comando.Parameters.AddWithValue(parametro.Nome, parametro.Valor);
+        }
         var valor = await comando.ExecuteScalarAsync(cancelamento);
         return (T)Convert.ChangeType(valor!, typeof(T), System.Globalization.CultureInfo.InvariantCulture);
     }

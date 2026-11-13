@@ -4,6 +4,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\JoyaPedidos.Dominio\JoyaPedidos.Dominio.csproj" />
   </ItemGroup>
 </Project>

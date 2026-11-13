@@ -8,13 +8,18 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
 
+  <!-- Acesso a dados (spec §13): Dapper com SQL explícito sobre o SqlClient; sem EF. -->
+  <ItemGroup Label="Producao">
+    <PackageVersion Include="Dapper" Version="2.1.89" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.1" />
+  </ItemGroup>
+
   <!--
     xUnit v3 (pacote xunit.v3, linha 4.x) roda sobre o Microsoft.Testing.Platform; o modo é ligado no
     global.json da raiz. Por isso não há Microsoft.NET.Test.Sdk nem xunit.runner.visualstudio (VSTest).
   -->
   <ItemGroup Label="Testes">
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.15" />
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.1" />
     <PackageVersion Include="Testcontainers.MsSql" Version="4.16.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.3" />
   </ItemGroup>
