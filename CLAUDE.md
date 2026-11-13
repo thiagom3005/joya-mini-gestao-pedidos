@@ -54,15 +54,30 @@ desenvolvido com Claude Code em Spec-Driven Development. O processo de engenhari
 |---|---|
 | Restaurar pacotes do backend | `dotnet restore backend/JoyaPedidos.slnx` |
 | Compilar o backend (0 avisos exigidos) | `dotnet build backend/JoyaPedidos.slnx` |
-| Testes unitários e de integração | `dotnet test backend/JoyaPedidos.slnx` (ou `cd backend && dotnet test`) |
+| Testes unitários e de integração (integração exige Docker) | `dotnet test backend/JoyaPedidos.slnx` (ou `cd backend && dotnet test`) |
 | Só um projeto de teste | `dotnet test --project backend/tests/JoyaPedidos.TestesUnitarios` |
+| Integração em ordem aleatória (repetibilidade) | `dotnet test --project backend/tests/JoyaPedidos.TestesIntegracao -- --seed 20261112` |
+| Subir o banco e aplicar os scripts | `docker compose up -d sqlserver db-init` |
+| Conferir (db-init deve estar `Exited (0)`) | `docker compose ps -a` |
+| Banco acessível no host (só 127.0.0.1) | `docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d sqlserver db-init` |
+| Reaplicar os scripts (idempotente) | `docker compose run --rm --no-deps db-init` |
+| Script manual / login do MCP (Git Bash: prefixe `MSYS_NO_PATHCONV=1`) | `docker compose run --rm --no-deps -e JOYA_MCP_SENHA db-init /opt/mssql-tools18/bin/sqlcmd -C -b -f 65001 -S sqlserver -U sa -i /database/dev/criar-login-mcp.sql` |
+| Parar mantendo os dados | `docker compose down` |
+| Reset completo do banco deste projeto (apaga só `joya-pedidos_dados-sql`) | `docker compose down -v` |
 | Pacotes vulneráveis, inclusive transitivos | `dotnet list backend/JoyaPedidos.slnx package --vulnerable --include-transitive` |
 | SDK e runtimes desatualizados | `dotnet sdk check` |
 | Verificar os hooks do Claude (qualquer SO com Node) | `node .claude/hooks/verificar-hooks.mjs` |
 | Mesma verificação em Linux via Docker, no Git Bash | `MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD":/w:ro -w /w node:24-alpine node .claude/hooks/verificar-hooks.mjs` |
 | Mesma verificação em Linux via Docker, no PowerShell | `docker run --rm -v "${PWD}:/w:ro" -w /w node:24-alpine node .claude/hooks/verificar-hooks.mjs` |
 
-Comandos de Docker e frontend serão acrescentados quando existirem (entregas E3 e E10). Não invente comandos.
+Comandos da API no Docker e do frontend serão acrescentados quando existirem (entregas E9 e E10). Não invente
+comandos.
+
+Notas do Docker e do banco:
+- Compose com nome de projeto `joya-pedidos`: nunca use `down -v` em outros projetos da máquina.
+- O `sqlserver` roda o `sqlservr` como processo principal (parada limpa) e o banco tem `IDENTITY_CACHE = OFF`.
+- O banco nunca publica porta no compose padrão. MCP e ferramentas usam o `docker-compose.dev.yml` (loopback).
+- Senha padrão do `sa` (`Joya_Dev_2026_Inseguro`): pública, insegura e só de desenvolvimento local.
 
 Notas do ambiente .NET:
 - `global.json` (raiz) liga o `dotnet test` ao Microsoft.Testing.Platform (xUnit v3, pacote `xunit.v3` 4.x) e
