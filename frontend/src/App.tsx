@@ -34,21 +34,31 @@ export function App() {
   const [mensagemSucesso, definirMensagemSucesso] = useState<string | null>(null)
   const refFocoDaConsulta = useRef<HTMLElement | null>(null)
   const refTitulo = useRef<HTMLHeadingElement>(null)
+  const refTentarNovamente = useRef<HTMLButtonElement>(null)
+  const refPaginacao = useRef<HTMLElement>(null)
   const { dados, carregando, falhou } = listagem
   const semLinhas = dados === null || dados.itens.length === 0
 
   // Filtrar, Limpar, Anterior e Próxima ficam desabilitados durante o carregamento (spec §6.2, item 5) e, desabilitados,
-  // perdem o foco. Ao terminar, o foco volta ao controle que disparou a consulta, se ele ainda puder recebê-lo.
+  // perdem o foco. Ao terminar, se o foco ficou perdido, ele volta ao controle que disparou a consulta. Quando esse
+  // controle não pode mais recebê-lo (Próxima desabilitada na última página, "Tentar novamente" que saiu da tela), vai
+  // para o botão de paginação ainda habilitado, para o "Tentar novamente" de uma nova falha ou para o título da seção.
   useEffect(() => {
     const controle = refFocoDaConsulta.current
     if (carregando || controle === null) {
       return
     }
     refFocoDaConsulta.current = null
-    if (document.activeElement === document.body && controle.isConnected && !controle.matches(':disabled')) {
-      controle.focus()
+    if (document.activeElement !== document.body) {
+      return
     }
-  }, [carregando])
+    const alvo = podeReceberFoco(controle)
+      ? controle
+      : falhou
+        ? refTentarNovamente.current
+        : (botaoHabilitadoDaPaginacao(refPaginacao.current, controle) ?? refTitulo.current)
+    alvo?.focus()
+  }, [carregando, falhou])
 
   function lembrarFoco(): void {
     refFocoDaConsulta.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
@@ -229,7 +239,12 @@ export function App() {
                   <CircleAlert size={24} />
                 </span>
                 <p className="estado__titulo">Não foi possível carregar os pedidos.</p>
-                <button type="button" className="botao botao--primario" onClick={tentarNovamente}>
+                <button
+                  type="button"
+                  ref={refTentarNovamente}
+                  className="botao botao--primario"
+                  onClick={tentarNovamente}
+                >
                   <RefreshCw />
                   Tentar novamente
                 </button>
@@ -252,6 +267,7 @@ export function App() {
 
           {!falhou && dados !== null && (
             <Paginacao
+              ref={refPaginacao}
               pagina={dados.pagina}
               totalPaginas={dados.totalPaginas}
               totalItens={dados.totalItens}
@@ -265,4 +281,13 @@ export function App() {
       {modalAberto && <ModalNovoPedido aoFechar={fecharModal} aoCriar={pedidoCriado} />}
     </>
   )
+}
+
+function podeReceberFoco(elemento: HTMLElement): boolean {
+  return elemento.isConnected && !elemento.matches(':disabled')
+}
+
+/** Se o controle que perdeu o foco é da paginação, o outro botão dela, quando habilitado. */
+function botaoHabilitadoDaPaginacao(paginacao: HTMLElement | null, controle: HTMLElement): HTMLButtonElement | null {
+  return paginacao?.contains(controle) ? paginacao.querySelector<HTMLButtonElement>('button:not(:disabled)') : null
 }
