@@ -19,6 +19,7 @@ desenvolvido com Claude Code em Spec-Driven Development. O processo de engenhari
 - Módulos da API: `Pedidos`, `Catalogo`, `Relatorios` e `Compartilhado`. Camada de serviço só em `Pedidos`.
 - Banco: scripts em `database/` são a única fonte do esquema. Dapper com SQL explícito; sem EF.
 - Frontend: `frontend/` (Vite + React + TS strict), página única, sem router e sem biblioteca de estado.
+- E2E: `e2e/` (Playwright, pacote npm próprio). CI: `.github/workflows/ci.yml` (backend, frontend, hooks e E2E).
 - Sem microsserviços, mensageria, CQRS, interfaces de repositório ou abstrações sem uso real.
 
 ## Convenções
@@ -79,17 +80,25 @@ desenvolvido com Claude Code em Spec-Driven Development. O processo de engenhari
 | Parte 4: gerar a massa (só no `joya-perf`; Git Bash: `MSYS_NO_PATHCONV=1`) | `docker compose -p joya-perf -f docker-compose.yml -f docker-compose.perf.yml run --rm --no-deps -T db-init /opt/mssql-tools18/bin/sqlcmd -C -b -f 65001 -S sqlserver -U sa -i /database/performance/gerar-massa.sql` |
 | Parte 4: medir o ranking (só no `joya-perf`; saída grande, redirecione para fora do repositório) | `docker compose -p joya-perf -f docker-compose.yml -f docker-compose.perf.yml run --rm --no-deps -T db-init /opt/mssql-tools18/bin/sqlcmd -C -b -f 65001 -y 0 -S sqlserver -U sa -d JoyaPedidos -i /database/performance/medir-ranking.sql` |
 | Parte 4: remover o ambiente de desempenho (apaga só `joya-perf_dados-sql`) | `docker compose -p joya-perf -f docker-compose.yml -f docker-compose.perf.yml down -v` |
+| E2E: subir o ambiente ISOLADO (projeto `joya-e12`, web 3012, API 5012; Git Bash) | `WEB_PORTA=3012 API_PORTA=5012 docker compose -p joya-e12 up --build -d` |
+| E2E: dependências (exatas do lock) e Chromium do Playwright | `npm --prefix e2e ci` / `cd e2e && npx playwright install chromium` |
+| E2E: rodar a suíte (recusa porta que não seja de um container do `joya-e12`; Git Bash) | `cd e2e && npx playwright test` |
+| E2E: verificação de tipos | `npm --prefix e2e run typecheck` |
+| E2E: remover o ambiente (apaga só `joya-e12_dados-sql`; confira antes com `docker compose -p joya-e12 ps -a`) | `docker compose -p joya-e12 down -v` |
 | Pacotes vulneráveis, inclusive transitivos | `dotnet list backend/JoyaPedidos.slnx package --vulnerable --include-transitive` |
 | SDK e runtimes desatualizados | `dotnet sdk check` |
 | Verificar os hooks do Claude (qualquer SO com Node) | `node .claude/hooks/verificar-hooks.mjs` |
 | Mesma verificação em Linux via Docker, no Git Bash | `MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD":/w:ro -w /w node:24-alpine node .claude/hooks/verificar-hooks.mjs` |
 | Mesma verificação em Linux via Docker, no PowerShell | `docker run --rm -v "${PWD}:/w:ro" -w /w node:24-alpine node .claude/hooks/verificar-hooks.mjs` |
+| Validar o workflow do GitHub Actions (Git Bash) | `MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD":/repo:ro -w /repo rhysd/actionlint:1.7.12 -no-color .github/workflows/ci.yml` |
 
 Não invente comandos: acrescente aqui só os que foram executados.
 
 Notas do Docker e do banco:
 - Compose com nome de projeto `joya-pedidos`: nunca use `down -v` em outros projetos da máquina.
 - A massa de desempenho (`database/performance/`) só roda no projeto isolado `joya-perf`, nunca no `joya-pedidos`.
+- Os E2E gravam pedidos e só rodam no projeto isolado `joya-e12` (portas 3012 e 5012). O compose fixa
+  `name: joya-pedidos`: qualquer `docker compose` sem `-p` age sobre o projeto principal.
 - O `sqlserver` roda o `sqlservr` como processo principal (parada limpa) e o banco tem `IDENTITY_CACHE = OFF`.
 - O banco nunca publica porta no compose padrão. MCP e ferramentas usam o `docker-compose.dev.yml` (loopback).
   Com o banco no ar por esse arquivo, um `docker compose up` só com o `docker-compose.yml` recria o `sqlserver` sem a

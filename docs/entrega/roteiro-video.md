@@ -66,8 +66,8 @@ Telas usadas:
   NuGet e apagar o banco nos testes. Cada entrega executada tem um registro com os números das validações, os achados
   das revisões e as minhas decisões. Quando a implementação divergiu da spec, eu registrei e decidi, sem alterar a
   spec em silêncio."
-- **Evidência anterior**: spec aprovada em 12/11/2026; plano §13; registro das entregas E0–E11 e E13 (a E12, com os
-  diferenciais, não foi executada); divergência do D3 aceita na E8.
+- **Evidência anterior**: spec aprovada em 12/11/2026; plano §13; registro das entregas E0–E13; divergência do D3
+  aceita na E8.
 - **Risco**: rolar arquivos longos consome tempo. **Contorno**: abas já posicionadas nas seções.
 
 ## C. `CLAUDE.md`, hooks, agentes e skill (1:10 – 2:35)
@@ -213,7 +213,8 @@ Telas usadas:
 
 - **Tela**: T3 com a saída da suíte completa executada antes da gravação (`total: 254`, `falhou: 0`); tabela de
   testes do README (114 unitários e 140 de integração); `RepositorioPedidos.cs`, linhas 30 (`UPDLOCK, ROWLOCK`) e 42
-  (`UPDATE` condicional); `ConcorrenciaPedidosTestes.cs` (IT-09 e IT-10).
+  (`UPDATE` condicional); `ConcorrenciaPedidosTestes.cs` (IT-09 e IT-10); seção "Diferenciais (E12)" do README e a
+  página do GitHub Actions com a execução do workflow `CI`.
 - **Ao vivo (T1, alguns segundos)**:
   ```bash
   dotnet test --project backend/tests/JoyaPedidos.TestesUnitarios --no-build
@@ -224,9 +225,14 @@ Telas usadas:
   acontece se ainda houver estoque. No IT-09, 20 pedidos simultâneos disputam 5 unidades: exatamente 5 criados, 15
   recusados, estoque final zero e nenhum erro 500. No IT-10, pedidos com os produtos em ordens inversas, em três
   rodadas: todos criados, estoques exatos e nenhum deadlock que chegue à API. Também fiz testes de mutação: desfiz cada
-  proteção numa cópia e confirmei que algum teste reprova."
+  proteção numa cópia e confirmei que algum teste reprova. Como diferencial, nove testes ponta a ponta com Playwright
+  rodam num projeto Compose isolado, que nunca toca o banco principal, e o GitHub Actions executa backend, frontend,
+  hooks e E2E a cada push."
+- **Atenção**: só dizer que o pipeline passa se a última execução do workflow `CI` estiver verde na tela; caso
+  contrário, cortar a frase sobre o GitHub Actions.
 - **Evidência anterior**: suíte completa com 254/254 na publicação da E11 e na execução antes da gravação; mutações da
-  E5 (sem a ordem crescente, o IT-10 reprova com 503).
+  E5 (sem a ordem crescente, o IT-10 reprova com 503); E2E com 9 de 9 em 10 execuções seguidas e mutação do envio
+  duplicado (registro da E12).
 - **Risco**: a suíte falhar no ensaio. **Contorno**: não gravar sem uma execução completa com 0 falhas na tela.
 
 ## I. Parte 4: análise SQL e desempenho (7:05 – 8:15)

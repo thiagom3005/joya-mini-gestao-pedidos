@@ -7,6 +7,7 @@ independente ao fechar as entregas e aprovação humana antes de cada publicaç�
 
 **Sumário:** [Escopo](#objetivo-e-escopo) · [Início rápido](#início-rápido) · [Arquitetura](#stack-e-arquitetura) ·
 [Docker](#execução-com-docker-compose) · [Endpoints](#endpoints) · [Testes](#testes) ·
+[Diferenciais](#diferenciais-e12) ·
 [Concorrência](#regras-transacionais-e-concorrência) · [Erros](#problem-details-e-tratamento-de-erros) ·
 [Interface](#interface-react) · [SDD](#spec-driven-development) · [Claude Code](#como-usei-o-claude-code) ·
 [MCP](#mcp-do-sql-server) · [Parte 4](#parte-4-debug-da-query-de-ranking) ·
@@ -24,8 +25,10 @@ A aplicação permite:
 
 A regra de negócio é simples de propósito: o que se avalia é o processo de engenharia assistido por IA. Ficaram fora
 do escopo (spec §1.3) autenticação, cadastro de clientes e produtos (vêm do seed), edição ou cancelamento de pedidos,
-idempotência do `POST`, tela de ranking, Swagger e deploy online. Os diferenciais do enunciado (Playwright e GitHub
-Actions, entrega E12 do plano, prioridade P2) **não foram executados**.
+idempotência do `POST`, tela de ranking, Swagger e deploy online (DUV-03; a viabilidade foi avaliada, mas nada foi
+publicado). Diferenciais do enunciado (entrega E12, prioridade P2): os testes ponta a ponta com Playwright estão
+implementados e validados localmente (CA-29); o pipeline do GitHub Actions está criado, mas só será dado como aprovado depois
+de uma execução verde no GitHub (ver [Diferenciais](#diferenciais-e12)).
 
 | Documento | Conteúdo |
 |---|---|
@@ -33,7 +36,7 @@ Actions, entrega E12 do plano, prioridade P2) **não foram executados**.
 | [docs/plan.md](docs/plan.md) | Plano aprovado (entregas E0–E13), decisões humanas e o registro detalhado de execução de cada entrega (§14). |
 | [CLAUDE.md](CLAUDE.md) e [.claude/](.claude) | Convenções, comandos testados, regras por área, hooks, agentes revisores e skill. |
 | [docs/evidencias/parte4](docs/evidencias/parte4) | Logs das medições, consolidado e planos reais da investigação da query. |
-| [docs/entrega](docs/entrega) | Roteiro do vídeo e checklists de gravação e de publicação. |
+| [docs/entrega](docs/entrega) | Roteiro do vídeo, checklists de gravação e de publicação e a avaliação do deploy online. |
 
 ## Início rápido
 
@@ -85,6 +88,8 @@ mensageria nem microsserviços.
 │   ├── src/JoyaPedidos.Dominio/    # entidades e regras puras
 │   └── tests/                      # JoyaPedidos.TestesUnitarios e JoyaPedidos.TestesIntegracao
 ├── frontend/                       # Vite + React + TypeScript, Dockerfile e nginx.conf
+├── e2e/                            # Playwright (pacote npm próprio): testes/api-real e testes/simulado
+├── .github/workflows/ci.yml        # GitHub Actions: backend, frontend, hooks e E2E
 ├── database/                       # 01..03 (automáticos), consultas/, performance/, dev/
 ├── docs/                           # spec.md, plan.md, evidencias/parte4/, entrega/
 ├── .claude/                        # settings.json (hooks), hooks/, rules/, agents/, skills/
@@ -176,9 +181,101 @@ dotnet test backend/JoyaPedidos.slnx
 - Testes de mutação nas E4, E5, E6 e E8: cada proteção importante foi desfeita, numa cópia descartável (E4 a E6) ou
   num arquivo alterado temporariamente e restaurado com o hash conferido (E8), para provar que algum teste reprova o
   defeito. Na E6, um mutante sobreviveu (desempate invertido só no CTE da listagem) e ganhou um teste próprio.
-- O frontend não tem testes automatizados: os E2E com Playwright eram P2 (E12) e não foram feitos. Os fluxos foram
-  conferidos no navegador, a maior parte com a API e o banco reais num ambiente descartável; erros de servidor e de
-  rede, o estado de carregando, a corrida entre consultas e o envio duplicado, com respostas simuladas no navegador.
+- O frontend é coberto pelos testes ponta a ponta com Playwright ([Diferenciais](#diferenciais-e12)). Antes deles,
+  os fluxos foram conferidos no navegador, a maior parte com a API e o banco reais num ambiente descartável; erros de
+  servidor e de rede, o estado de carregando, a corrida entre consultas e o envio duplicado, com respostas simuladas.
+
+## Diferenciais (E12)
+
+### Testes ponta a ponta (Playwright)
+
+Suíte em [e2e/](e2e), pacote npm próprio com `@playwright/test` 1.64.1 fixado, Chromium headless e TypeScript
+`strict`. Roda contra o stack do Docker Compose num **projeto isolado** (`joya-e12`, web na porta 3012, API na 5012).
+A preparação global recusa endereços que não sejam locais e qualquer porta que não seja publicada por um container do
+projeto `joya-e12` (conferido no Docker; isso barra a stack principal e o servidor do Vite, que encaminha `/api` para a
+API principal), e depois espera `GET /api/health` responder 200.
+
+No Git Bash (ou em Linux/macOS):
+
+```bash
+WEB_PORTA=3012 API_PORTA=5012 docker compose -p joya-e12 up --build -d
+```
+
+```bash
+npm --prefix e2e ci
+```
+
+```bash
+cd e2e && npx playwright install chromium && npx playwright test
+```
+
+```bash
+docker compose -p joya-e12 down -v
+```
+
+No Windows PowerShell 5.1 (sem `&&`): defina `$env:WEB_PORTA = '3012'` e `$env:API_PORTA = '5012'`, rode o
+`docker compose -p joya-e12 up --build -d` e, em seguida, `Remove-Item Env:WEB_PORTA, Env:API_PORTA`, para que um
+`up` posterior da stack principal na mesma sessão não use essas portas. Depois, em `e2e`, rode
+`npx playwright install chromium` e `npx playwright test` em linhas separadas. Em Linux, use
+`npx playwright install --with-deps chromium` para instalar também as bibliotecas do sistema.
+
+O `down -v` apaga só o volume `joya-e12_dados-sql`. **Nunca** rode `docker compose down -v` sem `-p`: o compose fixa
+`name: joya-pedidos`, e o comando atingiria o banco principal. O relatório HTML fica em `e2e/playwright-report`.
+
+| Projeto | Teste | O que prova |
+|---|---|---|
+| `api-real` | abre a aplicação com os pedidos do backend | Tabela e paginação iguais ao que a API devolve no mesmo momento. |
+| `api-real` | navega para a próxima página e volta | Página 2 e de volta à 1, com os números de pedido certos; "Anterior" desabilitado na primeira. |
+| `api-real` | **E2E-02**: filtra por cliente e por período | No arranjo, a API cria no mesmo dia um pedido do cliente e outro do homônimo dele; o filtro (cliente identificado pelo e-mail) traz o primeiro e não o segundo, só pedidos do cliente e do dia, com parâmetros, linhas e "Página X de Y · N pedidos" iguais aos da API. |
+| `api-real` | período invertido mostra o erro sem consultar a API | Mensagem ligada ao campo (`aria-invalid` e descrição acessível); o "Limpar" seguinte é a única consulta registrada. |
+| `api-real` | **E2E-01**: cria pedido com dois produtos | Total estimado, modal fechado, mensagem de sucesso e pedido no topo com cliente, itens e total corretos; o id do cliente gravado e o valor conferem com a escolha e os preços. |
+| `api-real` | **E2E-03**: estoque consumido antes do envio | Outro pedido pela API leva 1 unidade; o envio recebe 409, mostra "solicitado S, disponível S−1" e "Disponível agora" ligado ao campo, o modal fica aberto com os dados, e nada do pedido recusado é gravado. |
+| `api-real` | valida campos inválidos no navegador | Erros de cliente, produto e quantidade 0 ligados aos campos, sem requisição; só o envio válido vira `POST`. |
+| `simulado` | quatro acionamentos seguidos geram um único POST | Três cliques e um `requestSubmit` na mesma tarefa; o `POST` fica retido até o teste responder 201 simulado. |
+| `simulado` | depois de uma falha, um novo envio gera um segundo POST | 503 simulado mostra "Conflito momentâneo", mantém os dados e permite reenviar. |
+
+- **`api-real`**: navegador, nginx, API e SQL Server reais, **sem nenhuma interceptação**. Clientes e produtos vêm do
+  seed pela API (spec §10.5); os produtos são os de maior estoque (1.000 ou mais), e as asserções não dependem de ids
+  nem de totais fixos: a tela é comparada com a API no mesmo instante. Seletores por papéis e rótulos acessíveis
+  (spec §6.5). Cada execução grava 5 pedidos de poucas unidades.
+- **`simulado`**: a listagem e o catálogo vêm da API real, mas o `POST /api/pedidos` é interceptado com `page.route`
+  para segurar ou falhar a resposta. Prova comportamento do frontend; não é teste de integração e não grava nada.
+- Execução em série (`workers: 1`) e **sem retries**: uma falha intermitente aparece em vez de ser mascarada.
+- Resultados (14/11/2026, Windows, `joya-e12`), todos com 9 de 9 aprovados e nenhuma falha:
+  - versão final: 10 execuções seguidas num stack recriado do zero (dados de 33 para 83 pedidos), rodando ao mesmo
+    tempo que a suíte do backend num container Linux; de 23 a 44 s cada;
+  - primeira versão, antes das correções da revisão: 1 execução inicial e 10 seguidas no mesmo stack (de 33 para 77
+    pedidos), e 10 num stack recriado com carga de CPU paralela.
+- Mutação: com a trava por `ref` do envio removida numa cópia descartável do frontend, o teste de envio duplicado
+  reprovou (4 `POST` em vez de 1).
+
+### Integração contínua (GitHub Actions)
+
+[.github/workflows/ci.yml](.github/workflows/ci.yml) roda em todo push e pull request, com quatro jobs em
+`ubuntu-24.04`:
+
+| Job | Passos |
+|---|---|
+| `backend` | .NET pelo `global.json`; restore com auditoria NuGet (vulnerabilidade quebra o passo); build com avisos como erro; testes unitários e de integração (SQL Server real via Testcontainers); pacotes vulneráveis com transitivos, falhando se houver algum. |
+| `frontend` | Node 24.22.3 (o da imagem de build); `npm ci`, lint, typecheck, build e `npm audit --omit=dev`. |
+| `hooks` | `.NET` e Node; `node .claude/hooks/verificar-hooks.mjs`. Como o job tem todas as dependências, qualquer caso pulado faz o job falhar (em Linux, numa cópia sem `node_modules`, como no runner: 165 aprovadas, nenhuma pulada). |
+| `e2e` | Stack isolada `joya-e12` (portas 3012 e 5012, SQL Server sem porta publicada), Chromium do Playwright, a suíte E2E, relatório como artefato em caso de falha e `down -v` do projeto `joya-e12` no fim, sempre. |
+
+Segurança: permissões só de leitura, nenhum segredo no YAML, `persist-credentials: false` e actions oficiais fixadas
+por SHA de commit. O E2E usa a senha padrão de desenvolvimento do compose, que é pública e rotulada como insegura.
+O workflow foi validado localmente com o `actionlint` 1.7.12, **mas ainda não rodou no GitHub**: só um push com
+execução verde aprova o CA-30.
+
+### Deploy online (fora do escopo, só avaliado)
+
+**Não foi feito**: a spec deixa o deploy fora desta entrega (RNF-18, DUV-03). A avaliação, com custos,
+compatibilidade, segurança e os passos da opção recomendada, está em
+[docs/entrega/deploy-online.md](docs/entrega/deploy-online.md). Resumo:
+- Não há, na pesquisa feita, opção gratuita comprovada que rode SQL Server compatível com os scripts sem adaptação.
+- A edição Developer não pode ser usada em produção, e a aplicação não tem autenticação: numa URL pública, qualquer
+  pessoa criaria pedidos.
+- A recomendação é não publicar antes do envio. Se o candidato quiser publicar, a opção de menor risco é uma VPS x86 com
+  o mesmo compose, a edição Express e HTTPS por proxy, o que depende de contratar o servidor.
 
 ## Regras transacionais e concorrência
 
@@ -791,6 +888,7 @@ As decisões completas, com alternativas descartadas, estão na spec §13 (DEC-0
 | Limites de entrada: 1 a 50 itens, 1 a 10.000 unidades, página de 1 a 100 | Limitam o tamanho do payload e a duração da transação. | DEC-15 |
 | Massa de desempenho só no projeto isolado `joya-perf`, com trava pelo hostname da instância | O banco de demonstração nunca recebe a massa. | Plano, E8 |
 | Auditoria NuGet com avisos como erro, também no build da imagem | Uma vulnerabilidade quebra o build em vez de passar despercebida. | Plano, E2 e E9 |
+| E2E num projeto Compose isolado (`joya-e12`), com guarda de porta, execução em série e sem retries | Os testes gravam pedidos: o banco principal nunca é tocado, e uma falha intermitente aparece em vez de ser repetida até passar. | Plano, E12 |
 
 ## Limitações e riscos residuais
 
@@ -804,10 +902,10 @@ As decisões completas, com alternativas descartadas, estão na spec §13 (DEC-0
   E11): a disputa é provada pelo IT-09, e a ordem dos locks, pela mutação da E5. Uma versão determinística do IT-10
   foi testada na E13 e não foi adotada (registro da E13 no plano).
 - **Escala**: `GET /clientes` e `GET /produtos` sem paginação (RSK-06) e paginação por offset (RSK-07).
-- **Testes**: a integração roda no TestServer, com conferências manuais no Kestrel e pelo nginx; o frontend não tem
-  testes automatizados e não há pipeline de CI (Playwright e GitHub Actions eram P2 e não foram executados).
+- **Testes**: a integração roda no TestServer, com conferências manuais no Kestrel e pelo nginx. Os E2E rodam só no
+  Chromium e cobrem os fluxos principais, não todos os estados de erro. O workflow de CI ainda não rodou no GitHub.
 - **Frontend**: não foi verificado com leitores de tela, com o Alto Contraste real do Windows nem no Safari ou no
-  Firefox (os testes usaram o navegador embutido do app do Claude). Pendências de baixa severidade aceitas na E10: resumo
+  Firefox (verificação manual no navegador embutido do app do Claude e E2E no Chromium). Pendências de baixa severidade aceitas na E10: resumo
   de validação longo empurra o formulário em telas baixas, vários `role="alert"` simultâneos, densidade dos cartões
   no celular e semântica de tabela com `display: block` no Safari.
 - **Dependências**: `npm audit` acusa 9 vulnerabilidades moderadas só em dependências de desenvolvimento (advisory
