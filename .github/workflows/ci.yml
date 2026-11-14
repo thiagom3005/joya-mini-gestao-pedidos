@@ -1,0 +1,188 @@
+# Integração contínua (plano E12, CA-30): a cada push e pull request, build e testes do backend com SQL Server real
+# (Testcontainers), verificações do frontend, verificador dos hooks do Claude Code em Linux e E2E com Playwright
+# contra o Docker Compose.
+#
+# Segurança: permissões só de leitura, nenhum segredo, actions oficiais fixadas por SHA de commit (tag no comentário).
+# O SQL Server do compose não publica porta; o E2E usa o projeto isolado joya-e12 e a senha padrão de
+# desenvolvimento do compose, que é pública e rotulada como insegura (spec §11.4).
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+# Shell explícito: com "shell: bash" o GitHub usa `bash -eo pipefail`, e uma falha antes de um `| tee` não fica
+# escondida (sem shell explícito, o padrão é `bash -e`, sem pipefail).
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (.NET 10, testes com SQL Server real)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      # A auditoria NuGet roda no restore (NuGetAuditMode=all, avisos como erro): vulnerabilidade quebra o passo.
+      - name: Restaurar pacotes (com auditoria NuGet)
+        run: dotnet restore backend/JoyaPedidos.slnx
+
+      - name: Compilar (avisos tratados como erro)
+        run: dotnet build backend/JoyaPedidos.slnx --no-restore
+
+      # Unitários e integração (Microsoft.Testing.Platform, global.json); a integração sobe o SQL Server via
+      # Testcontainers no Docker do runner.
+      - name: Testes unitários e de integração
+        run: dotnet test backend/JoyaPedidos.slnx --no-build
+
+      - name: Pacotes vulneráveis, inclusive transitivos
+        run: |
+          dotnet list backend/JoyaPedidos.slnx package --vulnerable --include-transitive --format json > vulneraveis.json
+          cat vulneraveis.json
+          jq -e '(.problems // []) == [] and ([.projects[].frameworks[]? | (.topLevelPackages // []) + (.transitivePackages // []) | .[]] | length) == 0' vulneraveis.json
+
+  frontend:
+    name: Frontend (lint, tipos, build, audit)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Mesma versão do Node da imagem de build do frontend (frontend/Dockerfile).
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.22.3
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependências (exatas do lock)
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Verificação de tipos
+        run: npm run typecheck
+
+      - name: Build de produção
+        run: npm run build
+
+      - name: Vulnerabilidades em dependências de produção
+        run: npm audit --omit=dev
+
+  hooks:
+    name: Hooks do Claude Code (Linux)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # O verificador compila os projetos de fixture (.NET) e roda os hooks em Node.
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.22.3
+
+      # Os casos .NET do verificador compilam dentro do limite do hook pós-edição; com o restore antes, o tempo de baixar
+      # pacotes num runner sem cache não entra nesse limite.
+      - name: Restaurar pacotes do backend
+        run: dotnet restore backend/JoyaPedidos.slnx
+
+      # Neste job há .NET e Node, e o frontend não é instalado de propósito (o caso "sem frontend pronto" roda).
+      # Um caso pulado significaria dependência faltando no runner: o job falha em vez de esconder a lacuna.
+      - name: Verificar hooks (nenhum caso pode ser pulado)
+        run: |
+          node .claude/hooks/verificar-hooks.mjs | tee verificacao-hooks.txt
+          if grep -q "pulados" verificacao-hooks.txt; then
+            echo "::error::Casos do verificador foram pulados por falta de dependência no runner."
+            exit 1
+          fi
+
+  e2e:
+    name: E2E (Playwright contra o Docker Compose)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+        working-directory: e2e
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.22.3
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      # Projeto isolado, sempre com -p, nas portas de E2E (web 3012, API 5012); o SQL Server não publica porta.
+      - name: Subir a stack isolada (joya-e12)
+        working-directory: .
+        env:
+          WEB_PORTA: '3012'
+          API_PORTA: '5012'
+        run: docker compose -p joya-e12 up --build -d
+
+      - name: Instalar dependências do E2E (exatas do lock)
+        run: npm ci
+
+      - name: Verificação de tipos do E2E
+        run: npm run typecheck
+
+      - name: Instalar o Chromium do Playwright
+        run: npx playwright install --with-deps chromium
+
+      # A preparação global espera GET /api/health pelo nginx antes dos testes.
+      - name: Testes E2E
+        run: npx playwright test
+
+      - name: Estado e logs da stack (em caso de falha)
+        if: failure()
+        working-directory: .
+        run: |
+          docker compose -p joya-e12 ps -a
+          docker compose -p joya-e12 logs --no-color --tail 200 api web db-init
+
+      - name: Publicar relatório do Playwright (em caso de falha)
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: relatorio-playwright
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 7
+
+      - name: Remover a stack isolada (só o projeto joya-e12)
+        if: always()
+        working-directory: .
+        run: docker compose -p joya-e12 down -v --rmi local
