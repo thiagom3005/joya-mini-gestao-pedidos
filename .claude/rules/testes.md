@@ -24,4 +24,7 @@ Referência: spec §10 (catálogo UT, IT, E2E).
   assertado. Um 503 inesperado é investigado, nunca mascarado (spec §7.5).
 - Proibido enfraquecer ou remover asserção para fazer um teste passar, e proibido marcar teste como ignorado
   sem registro no `docs/plan.md`.
-- E2E (Playwright): stack recém-criado (`docker compose down -v` antes), dados do seed lidos pela API.
+- E2E (Playwright, `e2e/`): sempre no projeto isolado `joya-e12` (web 3012, API 5012), nunca na stack principal; a
+  suíte recusa porta que não seja publicada por um container do `joya-e12`. Stack recém-criado com `docker compose -p joya-e12 down -v` (nunca `down -v`
+  sem `-p`: o compose fixa `name: joya-pedidos`). Dados do seed lidos pela API, sem ids ou totais fixos. O projeto
+  `api-real` não intercepta nada; o `simulado` usa `page.route` e não grava. Sem retries: falha intermitente aparece.
