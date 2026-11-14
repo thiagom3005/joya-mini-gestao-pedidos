@@ -27,8 +27,8 @@ A regra de negócio é simples de propósito: o que se avalia é o processo de e
 do escopo (spec §1.3) autenticação, cadastro de clientes e produtos (vêm do seed), edição ou cancelamento de pedidos,
 idempotência do `POST`, tela de ranking, Swagger e deploy online (DUV-03; a viabilidade foi avaliada, mas nada foi
 publicado). Diferenciais do enunciado (entrega E12, prioridade P2): os testes ponta a ponta com Playwright estão
-implementados e validados localmente (CA-29); o pipeline do GitHub Actions está criado, mas só será dado como aprovado depois
-de uma execução verde no GitHub (ver [Diferenciais](#diferenciais-e12)).
+implementados e aprovados localmente e no runner Linux do GitHub (CA-29); o pipeline do GitHub Actions foi aprovado
+com uma execução verde no GitHub em 14/11/2026 (CA-30; ver [Diferenciais](#diferenciais-e12)).
 
 | Documento | Conteúdo |
 |---|---|
@@ -246,6 +246,7 @@ O `down -v` apaga só o volume `joya-e12_dados-sql`. **Nunca** rode `docker comp
     tempo que a suíte do backend num container Linux; de 23 a 44 s cada;
   - primeira versão, antes das correções da revisão: 1 execução inicial e 10 seguidas no mesmo stack (de 33 para 77
     pedidos), e 10 num stack recriado com carga de CPU paralela.
+- No GitHub Actions (runner Linux, job `e2e`), os 9 testes também passaram na execução que aprovou o CA-30.
 - Mutação: com a trava por `ref` do envio removida numa cópia descartável do frontend, o teste de envio duplicado
   reprovou (4 `POST` em vez de 1).
 
@@ -263,8 +264,10 @@ O `down -v` apaga só o volume `joya-e12_dados-sql`. **Nunca** rode `docker comp
 
 Segurança: permissões só de leitura, nenhum segredo no YAML, `persist-credentials: false` e actions oficiais fixadas
 por SHA de commit. O E2E usa a senha padrão de desenvolvimento do compose, que é pública e rotulada como insegura.
-O workflow foi validado localmente com o `actionlint` 1.7.12, **mas ainda não rodou no GitHub**: só um push com
-execução verde aprova o CA-30.
+O workflow foi validado localmente com o `actionlint` 1.7.12 e **aprovado no GitHub em 14/11/2026 (CA-30)**: a
+execução #1, disparada pelo push do commit `7e6e12c`, terminou com os quatro jobs (`backend`, `frontend`, `hooks` e
+`e2e`) em `success` ([execução no GitHub Actions](https://github.com/thiagom3005/joya-mini-gestao-pedidos/actions/runs/43636057666)). Nela, o backend teve 254 de 254 testes aprovados, o
+verificador de hooks 165 aprovados e nenhum pulado, e o Playwright 9 de 9.
 
 ### Deploy online (fora do escopo, só avaliado)
 
@@ -903,7 +906,7 @@ As decisões completas, com alternativas descartadas, estão na spec §13 (DEC-0
   foi testada na E13 e não foi adotada (registro da E13 no plano).
 - **Escala**: `GET /clientes` e `GET /produtos` sem paginação (RSK-06) e paginação por offset (RSK-07).
 - **Testes**: a integração roda no TestServer, com conferências manuais no Kestrel e pelo nginx. Os E2E rodam só no
-  Chromium e cobrem os fluxos principais, não todos os estados de erro. O workflow de CI ainda não rodou no GitHub.
+  Chromium e cobrem os fluxos principais, não todos os estados de erro.
 - **Frontend**: não foi verificado com leitores de tela, com o Alto Contraste real do Windows nem no Safari ou no
   Firefox (verificação manual no navegador embutido do app do Claude e E2E no Chromium). Pendências de baixa severidade aceitas na E10: resumo
   de validação longo empurra o formulário em telas baixas, vários `role="alert"` simultâneos, densidade dos cartões
